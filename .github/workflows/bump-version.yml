@@ -80,5 +80,6 @@ jobs:
                   GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
               run: |
                   echo ">> Pushing bump commit and tag to origin main..."
+                  git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
                   git push origin main --follow-tags
                   echo ">> [OK] Tag pushed successfully. Companion release.yml workflow will handle publication."

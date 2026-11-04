@@ -1,0 +1,29 @@
+{
+    "name": "@camp_candor/700.microserviceaudio",
+    "version": "0.0.3",
+    "private": true,
+    "type": "module",
+    "main": "BEE.ts",
+    "exports": {
+        ".": {
+            "types": "./BEE.ts",
+            "import": "./BEE.ts",
+            "require": "./BEE.ts",
+            "default": "./BEE.ts"
+        },
+        "./hunt": {
+            "types": "./hunt.ts",
+            "import": "./hunt.ts",
+            "require": "./hunt.ts",
+            "default": "./hunt.ts"
+        }
+    },
+    "terminal": {
+        "globalKey": "MICROSERVICEAUDIO",
+        "menuTitle": "MICROSERVICEAUDIO MENU",
+        "menuDesc": "Open the microserviceaudio management console."
+    },
+    "scripts": {
+        "test": "vitest run"
+    }
+}

@@ -117,7 +117,7 @@ const init = async () => {
     global.window = global as any
     ;(global as any).PIVOTS = (global as any).PIVOTS || {}
 
-    const idx = options.separator
+    const idx = options.separator || 'microserviceaudio'
     if (idx) console.log(`   Targeting: ${idx}`)
 
     const libPath = path.resolve(import.meta.dirname, './dist/995.library')
