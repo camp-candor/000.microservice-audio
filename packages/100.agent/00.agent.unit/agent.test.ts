@@ -23,7 +23,10 @@ describe('agent unit buzzers', () => {
         const bal = { idx: 'test', slv } as any
 
         const expectedUrl = `${getBaseUrl()}/health`
-        const mockHealth = { status: 'healthy', service: 'microservice-audio-worker' }
+        const mockHealth = {
+            status: 'healthy',
+            service: 'microservice-audio-worker',
+        }
 
         globalThis.fetch = vi.fn().mockImplementation((url: string) => {
             if (url === expectedUrl) {

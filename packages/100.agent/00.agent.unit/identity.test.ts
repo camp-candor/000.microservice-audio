@@ -13,7 +13,9 @@ describe('Dynamic Repository Identity Resolver (100.agent)', () => {
         const legacyToken = ['repo', 'bot'].join('-')
         expect(identity.name.toLowerCase()).not.toContain(legacyToken)
         expect(identity.name).toBe('microservice-audio')
-        expect(identity.titleBanner).toMatch(/^microservice-audio v\d+\.\d+\.\d+$/)
+        expect(identity.titleBanner).toMatch(
+            /^microservice-audio v\d+\.\d+\.\d+$/,
+        )
     })
 
     it('dynamically adapts when run against a downstream repo manifest', () => {

@@ -5,7 +5,7 @@ import ModBit from '../fce/modBit.js'
 import State from '../../99.core/state.js'
 
 import * as ActCol from '../../97.collect.unit/collect.action.js'
-import * as ActMod from '../../01.model.unit/model.action.js'
+import * as ActMod from '../../96.model.unit/model.action.js'
 
 var bit, dat
 

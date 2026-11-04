@@ -3,9 +3,9 @@
 > Operational manual, monorepo architecture, invariant specifications, coding
 > standards, and historical-record index for the `microservice-audio` ecosystem.
 >
-> `microservice-audio` is the **upstream boilerplate**: a Deterministic Edge DevOps
-> Control Plane (Cloudflare Worker + Durable Objects + LLM tool calling) paired
-> with a Blessed terminal cockpit. Downstream repos (e.g. `npm-agent-02`,
+> `microservice-audio` is the **upstream boilerplate**: a Deterministic Edge
+> DevOps Control Plane (Cloudflare Worker + Durable Objects + LLM tool calling)
+> paired with a Blessed terminal cockpit. Downstream repos (e.g. `npm-agent-02`,
 > `001.goblin-lore`) are cloned from it, so every change here must stay
 > **generic, identity-agnostic, and template-safe**.
 
@@ -44,8 +44,8 @@ Before writing code, orient yourself in this order:
   Windows (cmd.exe / PowerShell) and POSIX. Prefer `node -e` one-liners over raw
   shell built-ins (`test -z`, `export`, `rm -rf`).
 - **Template Generalization Law:** Never hardcode repository identity (e.g.
-  `"REPO-BOT"`, `"MICROSERVICE-AUDIO"`). Derive names/versions dynamically -- see
-  `packages/100.agent/src/identity.ts` (`getRepoIdentity`).
+  `"REPO-BOT"`, `"MICROSERVICE-AUDIO"`). Derive names/versions dynamically --
+  see `packages/100.agent/src/identity.ts` (`getRepoIdentity`).
 - **HARNESS IMMUTABILITY BOUNDARY (`apps/995.library`):**
   `apps/995.library/995.library/**` is the canonical upstream terminal harness
   and is **STRICTLY IMMUTABLE**. Never add, modify, or delete models, reducers,
@@ -218,19 +218,23 @@ machine:
   terminal emulators. Verify with:
   `git grep -P "[\x{1F300}-\x{1FAD6}]" packages/ apps/worker/src apps/995.library/run.ts`
   (must return 0 matches).
-- **Blessed 12x12 Cockpit Dual-Pane Layout Standard:**
-  Every package flight deck mounted into the Blessed alternate screen buffer
-  (`apps/995.library`) must maintain the dual-pane topology:
-  1. **Left Control Pane (Columns 0-4 / 33% width, Rows 4-12):** Houses exactly the
-     6 interactive domain choices, rendered via `[Open action] Open Choice` with
-     mandatory `net: gridChoice?.grdBit?.dat` binding. Never omit `net` mesh anchoring
-     (doing so causes choice rendering to blow out to 100% full-screen width, obliterating the layout).
-  2. **Right Information & Telemetry Pane (Columns 4-12 / 67% width, Rows 0-12):**
-     Must mount `cns00` via `[Grid action] Update Grid` `{ x: 4, y: 0, xSpan: 8, ySpan: 12 }`
-     AND `[Write action] Write Console` `{ idx: 'cns00', dat: { net: gridConsole?.grdBit?.dat, src: 'alligator0' } }`.
-     All telemetry, boot banners, and live item-focus descriptions stream exclusively into `cns00`.
-  3. **Coding Agent Prohibition:** The Coding Agent is **NEVER** to alter, collapse, or remove
-     this dual-pane layout, omit `WRITE_CONSOLE`, or strip the information panel from the TUI.
+- **Blessed 12x12 Cockpit Dual-Pane Layout Standard:** Every package flight deck
+  mounted into the Blessed alternate screen buffer (`apps/995.library`) must
+  maintain the dual-pane topology:
+  1. **Left Control Pane (Columns 0-4 / 33% width, Rows 4-12):** Houses exactly
+     the 6 interactive domain choices, rendered via `[Open action] Open Choice`
+     with mandatory `net: gridChoice?.grdBit?.dat` binding. Never omit `net`
+     mesh anchoring (doing so causes choice rendering to blow out to 100%
+     full-screen width, obliterating the layout).
+  2. **Right Information & Telemetry Pane (Columns 4-12 / 67% width, Rows
+     0-12):** Must mount `cns00` via `[Grid action] Update Grid`
+     `{ x: 4, y: 0, xSpan: 8, ySpan: 12 }` AND `[Write action] Write Console`
+     `{ idx: 'cns00', dat: { net: gridConsole?.grdBit?.dat, src: 'alligator0' } }`.
+     All telemetry, boot banners, and live item-focus descriptions stream
+     exclusively into `cns00`.
+  3. **Coding Agent Prohibition:** The Coding Agent is **NEVER** to alter,
+     collapse, or remove this dual-pane layout, omit `WRITE_CONSOLE`, or strip
+     the information panel from the TUI.
 
 ---
 
