@@ -1,1 +1,7 @@
-export { initGenerate, updateGenerate, execGenerate } from './buz/generate.buzz.js';
+export {
+  initGenerate,
+  updateGenerate,
+  execGenerate,
+  pollFileStabilization,
+  waitForBufferStabilization,
+} from './buz/generate.buzz.js';
