@@ -1,2 +1,6 @@
-export { initConditioning } from './buz/conditioning.buzz'
-export { updateConditioning } from './buz/conditioning.buzz'
+export {
+  initConditioning,
+  updateConditioning,
+  validatePhonation,
+  assertPhonationFeasibility,
+} from './buz/conditioning.buzz.js';

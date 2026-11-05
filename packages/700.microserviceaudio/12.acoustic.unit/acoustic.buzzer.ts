@@ -1,2 +1,6 @@
-export { initAcoustic } from './buz/acoustic.buzz'
-export { updateAcoustic } from './buz/acoustic.buzz'
+export {
+  initAcoustic,
+  updateAcoustic,
+  resolveDspModifiers,
+  calculateSomaticDspModifiers,
+} from './buz/acoustic.buzz.js';
