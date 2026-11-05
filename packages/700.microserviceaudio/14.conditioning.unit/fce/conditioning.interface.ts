@@ -1,7 +1,7 @@
-import ConditioningBit from './conditioning.bit'
+import type ConditioningBit from './conditioning.bit.js';
 
 export default interface Conditioning {
-    // idx:string;
-    // conditioningBitList: ConditioningBit[];
-    // conditioningBits:any;
+  idx: string;
+  profilesProcessed: number;
+  conditioningBits: Record<string, ConditioningBit>;
 }

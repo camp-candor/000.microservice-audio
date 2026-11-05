@@ -1,8 +1,8 @@
-import Acoustic from './fce/acoustic.interface'
-import AcousticBit from './fce/acoustic.interface'
+import type Acoustic from './fce/acoustic.interface.js';
+import type AcousticBit from './fce/acoustic.bit.js';
 
 export class AcousticModel implements Acoustic {
-    //idx:string;
-    //acousticBitList: AcousticBit[] = [];
-    //acousticBits: any = {};
+  idx: string = '12.acoustic';
+  modulationsResolved: number = 0;
+  acousticBits: Record<string, AcousticBit> = {};
 }

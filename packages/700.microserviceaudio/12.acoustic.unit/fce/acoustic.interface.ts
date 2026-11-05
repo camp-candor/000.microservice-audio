@@ -1,7 +1,7 @@
-import AcousticBit from './acoustic.bit'
+import type AcousticBit from './acoustic.bit.js';
 
 export default interface Acoustic {
-    // idx:string;
-    // acousticBitList: AcousticBit[];
-    // acousticBits:any;
+  idx: string;
+  modulationsResolved: number;
+  acousticBits: Record<string, AcousticBit>;
 }
