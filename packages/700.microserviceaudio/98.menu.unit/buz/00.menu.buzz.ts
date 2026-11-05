@@ -593,6 +593,746 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                 })
             }
 
+            // 11. WebSocket telemetry tunnel journey (real actor + socket pair)
+            const hadGlobalPair = 'WebSocketPair' in globalThis
+            const NativeResponse = globalThis.Response
+            try {
+                const makeWsSocket = (): any => ({
+                    sentMessages: [] as string[],
+                    attachment: null as any,
+                    tags: [] as string[],
+                    send(data: any) {
+                        this.sentMessages.push(
+                            typeof data === 'string' ? data : String(data),
+                        )
+                    },
+                    serializeAttachment(att: any) {
+                        this.attachment = att
+                    },
+                    deserializeAttachment() {
+                        return this.attachment
+                    },
+                    addEventListener() {},
+                    close() {},
+                })
+                ;(globalThis as any).WebSocketPair = function (this: any) {
+                    this[0] = makeWsSocket()
+                    this[1] = makeWsSocket()
+                }
+
+                const wsTables: any = {
+                    active_leases: [],
+                    epoch_metadata: [{ id: 1, current_epoch: 1 }],
+                }
+                const wsSockets: any[] = []
+                const wsMockSql = {
+                    exec: (query: string, ...params: any[]) => {
+                        const q = query.trim().toUpperCase()
+                        if (q.startsWith('SELECT CURRENT_EPOCH')) {
+                            return {
+                                toArray: () => [...wsTables.epoch_metadata],
+                            }
+                        }
+                        if (q.startsWith('SELECT * FROM ACTIVE_LEASES')) {
+                            return {
+                                toArray: () => [...wsTables.active_leases],
+                            }
+                        }
+                        if (q.startsWith('INSERT INTO ACTIVE_LEASES')) {
+                            wsTables.active_leases = [
+                                {
+                                    lease_id: params[0],
+                                    holder_id: params[1],
+                                    line_id: params[2],
+                                    epoch: params[3],
+                                    acquired_at_ms: params[4],
+                                    heartbeat_at_ms: params[5],
+                                    expires_at_ms: params[6],
+                                },
+                            ]
+                            return { toArray: () => [] }
+                        }
+                        if (q.startsWith('DELETE FROM ACTIVE_LEASES')) {
+                            wsTables.active_leases = []
+                            return { toArray: () => [] }
+                        }
+                        if (q.startsWith('UPDATE EPOCH_METADATA')) {
+                            wsTables.epoch_metadata[0].current_epoch = params[0]
+                            return { toArray: () => [] }
+                        }
+                        if (q.startsWith('UPDATE ACTIVE_LEASES')) {
+                            if (wsTables.active_leases[0]) {
+                                wsTables.active_leases[0].heartbeat_at_ms =
+                                    params[0]
+                                wsTables.active_leases[0].expires_at_ms =
+                                    params[1]
+                            }
+                            return { toArray: () => [] }
+                        }
+                        return { toArray: () => [] }
+                    },
+                }
+                const wsMockState: any = {
+                    storage: {
+                        sql: wsMockSql,
+                        setAlarm: async (ms: number) => {},
+                        deleteAlarm: async () => {},
+                    },
+                    acceptWebSocket(ws: any, tags: string[] = []) {
+                        ws.tags = tags
+                        wsSockets.push(ws)
+                    },
+                    getWebSockets(tag?: string) {
+                        if (!tag) return wsSockets
+                        return wsSockets.filter((s: any) =>
+                            s.tags.includes(tag),
+                        )
+                    },
+                }
+                const wsDoMod = require(
+                    path.resolve(
+                        edgeRoot(),
+                        'apps/worker/src/objects/AudioLeaseDO.ts',
+                    ),
+                )
+                const wsLeaseDO = new wsDoMod.AudioLeaseDO(wsMockState, {})
+                const wsWorker = require(
+                    path.resolve(edgeRoot(), 'apps/worker/src/index.ts'),
+                )
+                const wsApp = wsWorker.default || wsWorker
+                const wsEnv: any = {
+                    AUDIO_LEASE_DO: {
+                        idFromName: () => ({}),
+                        get: () => wsLeaseDO,
+                    },
+                }
+
+                wsLeaseDO.broadcastTelemetry({
+                    type: 'TUNNEL_PRIMER',
+                    source: 'cns00',
+                    payload: { note: 'tunnel primed' },
+                    ascii: '>> [OK] [WS:PRIMER] tunnel primed',
+                })
+
+                // Node fetch rejects 101 status codes; tolerate them outside the isolate
+                ;(globalThis as any).Response = class extends NativeResponse {
+                    constructor(body: any, init: any) {
+                        if (init && init.status === 101) {
+                            super(body, { ...init, status: 200 })
+                            Object.defineProperty(this, 'status', {
+                                value: 101,
+                            })
+                        } else {
+                            super(body, init)
+                        }
+                    }
+                }
+
+                const upRes = await wsApp.fetch(
+                    new Request('http://localhost/ws/telemetry?role=operator', {
+                        headers: { Upgrade: 'websocket' },
+                    }),
+                    wsEnv,
+                )
+                if (upRes.status === 101) {
+                    await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: '>> [WS:OPEN] Edge telemetry tunnel established [OK]',
+                    })
+                    const serverSock = wsSockets[wsSockets.length - 1]
+                    const history: any = JSON.parse(serverSock.sentMessages[0])
+                    if (history?.type === 'TELEMETRY_HISTORY') {
+                        await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                            idx: 'cns00',
+                            src: `>> [WS:REPLAY] Restoring historical telemetry frames (seq: ${history.seq})`,
+                        })
+                    }
+                }
+
+                const wsAcq = await wsLeaseDO.fetch(
+                    new Request('http://localhost/lease/acquire', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            holderId: 'worker_rig1',
+                            lineId: 'ws_line',
+                        }),
+                    }),
+                )
+                const wsGrant: any = await wsAcq.json()
+                if (
+                    wsAcq.status === 200 &&
+                    wsGrant?.status === 'LEASE_GRANTED'
+                ) {
+                    await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: `>> [OK] [DO:MUTEX] Granted hardware lease [${wsGrant.lease.leaseId}] (Epoch: ${wsGrant.lease.epoch})`,
+                    })
+                    wsLeaseDO.broadcastTelemetry({
+                        type: 'LEASE_GRANTED',
+                        source: 'mutex',
+                        payload: { leaseId: wsGrant.lease.leaseId },
+                        ascii: `>> [OK] [DO:MUTEX] lease live at epoch ${wsGrant.lease.epoch}`,
+                    })
+                }
+
+                const plainRes = await wsApp.fetch(
+                    new Request('http://localhost/ws/telemetry'),
+                    wsEnv,
+                )
+                if (plainRes.status === 426) {
+                    await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: ':: [FAIL] [WS:UPGRADE] HTTP 426 Upgrade Required',
+                    })
+                }
+            } catch (err: any) {
+                const detail = (err?.message || 'tunnel probe failed').slice(
+                    0,
+                    120,
+                )
+                await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: `:: [FAIL] [WS:UPGRADE] ${detail}`,
+                })
+            } finally {
+                ;(globalThis as any).Response = NativeResponse
+                if (!hadGlobalPair) {
+                    delete (globalThis as any).WebSocketPair
+                }
+            }
+
+            // 12. TypeBox firewall validation probe (valid scene AST)
+            try {
+                require('tsx/cjs')
+                const astWorker = require(
+                    path.resolve(edgeRoot(), 'apps/worker/src/index.ts'),
+                )
+                const astApp = astWorker.default || astWorker
+                const astEnv: any = {
+                    AUDIO_GATEWAY_SECRET: 'unused_for_cf_path',
+                    CF_ACCESS_CLIENT_ID: 'demo_cf_id',
+                    CF_ACCESS_CLIENT_SECRET: 'demo_cf_secret',
+                }
+                const astCreds = {
+                    'Content-Type': 'application/json',
+                    'CF-Access-Client-Id': 'demo_cf_id',
+                    'CF-Access-Client-Secret': 'demo_cf_secret',
+                }
+                const validAst = {
+                    sceneId: 'sc_01',
+                    seriesId: 'series_001',
+                    state_snapshot_hash:
+                        '3a7894a4c1477ea53d7e5d2ea99401b34e402b896489370891d4e022064104d4',
+                    dialogueLines: [
+                        {
+                            lineId: 'line_01',
+                            shotIndex: 0,
+                            character: 'char_wart',
+                            text: 'Hold the gates until dawn.',
+                        },
+                    ],
+                }
+                const okRes = await astApp.fetch(
+                    new Request('http://localhost/ast/validate', {
+                        method: 'POST',
+                        headers: astCreds,
+                        body: JSON.stringify(validAst),
+                    }),
+                    astEnv,
+                )
+                const okBody: any = await okRes.json()
+                if (
+                    okRes.status === 200 &&
+                    okBody?.status === 'INGRESS_SCHEMA_VALIDATED'
+                ) {
+                    await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: `>> [OK] [TYPEBOX:FIREWALL] Ingress AST verified for Scene [${okBody.sceneId}] (${okBody.totalLines} lines, 0 extra keys)`,
+                    })
+                    const anchor = String(
+                        okBody.state_snapshot_hash || '',
+                    ).slice(0, 12)
+                    await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: `>> [OK] [TYPEBOX:SNAPSHOT] Merkle anchor verified (${anchor}...)`,
+                    })
+                }
+
+                // 13. Negative control: undeclared key must fail closed
+                const hostileAst = {
+                    ...validAst,
+                    rogueLLMAttribute: 'INJECTED',
+                }
+                const badRes = await astApp.fetch(
+                    new Request('http://localhost/ast/validate', {
+                        method: 'POST',
+                        headers: astCreds,
+                        body: JSON.stringify(hostileAst),
+                    }),
+                    astEnv,
+                )
+                const badBody: any = await badRes.json()
+                const violations: any[] = badBody?.invalidProperties || []
+                const closedWorldTrap = violations.some(
+                    (v: any) =>
+                        typeof v?.path === 'string' &&
+                        v.path.includes('rogueLLMAttribute'),
+                )
+                if (
+                    badRes.status === 400 &&
+                    badBody?.title ===
+                        'Structural Firewall Validation Failure' &&
+                    closedWorldTrap
+                ) {
+                    await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: ':: [FAIL] [TYPEBOX:FIREWALL] Structural Firewall Validation Failure: Expected no additional properties',
+                    })
+                }
+            } catch (err: any) {
+                const detail = (err?.message || 'ast probe failed').slice(
+                    0,
+                    120,
+                )
+                await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: `:: [FAIL] [TYPEBOX:FIREWALL] ${detail}`,
+                })
+            }
+
+            // 14. R2 signed upload authorization (real app + live lease actor)
+            try {
+                require('tsx/cjs')
+                const r2Worker = require(
+                    path.resolve(edgeRoot(), 'apps/worker/src/index.ts'),
+                )
+                const r2App = r2Worker.default || r2Worker
+                const r2DoMod = require(
+                    path.resolve(
+                        edgeRoot(),
+                        'apps/worker/src/objects/AudioLeaseDO.ts',
+                    ),
+                )
+                const makeLeaseActor = () => {
+                    const leaseTables: any = {
+                        active_leases: [],
+                        epoch_metadata: [{ id: 1, current_epoch: 1 }],
+                    }
+                    const leaseSql = {
+                        exec: (query: string, ...params: any[]) => {
+                            const q = query.trim().toUpperCase()
+                            if (q.startsWith('SELECT CURRENT_EPOCH')) {
+                                return {
+                                    toArray: () => [
+                                        ...leaseTables.epoch_metadata,
+                                    ],
+                                }
+                            }
+                            if (q.startsWith('SELECT * FROM ACTIVE_LEASES')) {
+                                return {
+                                    toArray: () => [
+                                        ...leaseTables.active_leases,
+                                    ],
+                                }
+                            }
+                            if (q.startsWith('INSERT INTO ACTIVE_LEASES')) {
+                                leaseTables.active_leases = [
+                                    {
+                                        lease_id: params[0],
+                                        holder_id: params[1],
+                                        line_id: params[2],
+                                        epoch: params[3],
+                                        acquired_at_ms: params[4],
+                                        heartbeat_at_ms: params[5],
+                                        expires_at_ms: params[6],
+                                    },
+                                ]
+                                return { toArray: () => [] }
+                            }
+                            if (q.startsWith('DELETE FROM ACTIVE_LEASES')) {
+                                leaseTables.active_leases = []
+                                return { toArray: () => [] }
+                            }
+                            if (q.startsWith('UPDATE EPOCH_METADATA')) {
+                                leaseTables.epoch_metadata[0].current_epoch =
+                                    params[0]
+                                return { toArray: () => [] }
+                            }
+                            if (q.startsWith('UPDATE ACTIVE_LEASES')) {
+                                if (leaseTables.active_leases[0]) {
+                                    leaseTables.active_leases[0].heartbeat_at_ms =
+                                        params[0]
+                                    leaseTables.active_leases[0].expires_at_ms =
+                                        params[1]
+                                }
+                                return { toArray: () => [] }
+                            }
+                            return { toArray: () => [] }
+                        },
+                    }
+                    return new r2DoMod.AudioLeaseDO(
+                        {
+                            storage: {
+                                sql: leaseSql,
+                                setAlarm: async (ms: number) => {},
+                                deleteAlarm: async () => {},
+                            },
+                        },
+                        {},
+                    )
+                }
+                const r2Objects = new Map<string, any>()
+                const r2Bucket: any = {
+                    head: async (key: string) => {
+                        const obj = r2Objects.get(key)
+                        return obj
+                            ? {
+                                  key,
+                                  size: obj.size,
+                                  uploaded: obj.uploaded,
+                              }
+                            : null
+                    },
+                    list: async (opts?: any) => {
+                        const res: any[] = []
+                        for (const [key, val] of r2Objects.entries()) {
+                            if (key.startsWith(opts?.prefix || '')) {
+                                res.push({
+                                    key,
+                                    size: val.size,
+                                    uploaded: val.uploaded,
+                                })
+                            }
+                        }
+                        return { objects: res }
+                    },
+                    delete: async (key: string) => {
+                        r2Objects.delete(key)
+                    },
+                }
+                const d1Statements: string[] = []
+                const d1Db: any = {
+                    prepare: (sql: string) => {
+                        d1Statements.push(sql)
+                        return {
+                            bind: () => ({
+                                run: async () => ({ success: true }),
+                            }),
+                            run: async () => ({ success: true }),
+                        }
+                    },
+                }
+                const nsFor = (actor: any) => ({
+                    idFromName: () => ({}),
+                    get: () => ({
+                        fetch: (req: any) => actor.fetch(req),
+                    }),
+                })
+                const envFor = (actor: any): any => ({
+                    AUDIO_LEASE_DO: nsFor(actor),
+                    CANON_DB: d1Db,
+                    AUDIO_STEMS_BUCKET: r2Bucket,
+                    CF_ACCESS_CLIENT_ID: 'demo_cf_id',
+                    CF_ACCESS_CLIENT_SECRET: 'demo_cf_secret',
+                })
+                const r2Creds = {
+                    'Content-Type': 'application/json',
+                    'CF-Access-Client-Id': 'demo_cf_id',
+                    'CF-Access-Client-Secret': 'demo_cf_secret',
+                }
+                const r2Post = (env: any, sub: string, payload: any) =>
+                    r2App.fetch(
+                        new Request(`http://localhost${sub}`, {
+                            method: 'POST',
+                            headers: r2Creds,
+                            body: JSON.stringify(payload),
+                        }),
+                        env,
+                    )
+
+                const leasedActor = makeLeaseActor()
+                await leasedActor.fetch(
+                    new Request('http://localhost/lease/acquire', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            holderId: 'worker_rig1',
+                            lineId: 'r2_line',
+                        }),
+                    }),
+                )
+                const leaseStatus: any = await (
+                    await leasedActor.fetch(
+                        new Request('http://localhost/lease/status'),
+                    )
+                ).json()
+                const leasedEnv = envFor(leasedActor)
+
+                const upRes = await r2Post(leasedEnv, '/stems/signed-upload', {
+                    leaseId: leaseStatus.activeLease.leaseId,
+                    epoch: leaseStatus.currentEpoch,
+                    seriesId: 'series_01',
+                    sceneId: 'sc_01',
+                    stemId: 'stem_01',
+                })
+                const upBody: any = await upRes.json()
+                if (
+                    upRes.status === 200 &&
+                    upBody?.status === 'SIGNED_UPLOAD_GRANTED'
+                ) {
+                    await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: `>> [OK] [R2:UPLOAD] Authorized signed upload URL for [${upBody.objectKey}]`,
+                    })
+                }
+
+                // 15. Cryptographic confirmation + D1 sealing
+                r2Objects.set('stems/series_01/sc_01/stem_01.wav', {
+                    size: 240044,
+                    uploaded: new Date(),
+                })
+                const stemSha =
+                    '3a7894a4c1477ea53d7e5d2ea99401b34e402b896489370891d4e022064104d4'
+                const cfRes = await r2Post(leasedEnv, '/stems/confirm', {
+                    leaseId: leaseStatus.activeLease.leaseId,
+                    epoch: leaseStatus.currentEpoch,
+                    objectKey: 'stems/series_01/sc_01/stem_01.wav',
+                    sha256: stemSha,
+                    durationMs: 2500,
+                    byteLength: 240044,
+                })
+                const cfBody: any = await cfRes.json()
+                const ledgerWrites = d1Statements.filter((s: string) =>
+                    s.includes('audio_stem_ledger'),
+                ).length
+                if (
+                    cfRes.status === 200 &&
+                    cfBody?.status === 'STEM_CONFIRMED_AND_SEALED' &&
+                    ledgerWrites > 0
+                ) {
+                    await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: `>> [OK] [R2:CONFIRM] Stem [${cfBody.stemId}] sealed into D1 ledger (${cfBody.byteLength} bytes, SHA: ${String(cfBody.sha256).slice(0, 8)}...)`,
+                    })
+                }
+
+                // 16. Staging sweeper execution
+                const sweeperMod = require(
+                    path.resolve(
+                        edgeRoot(),
+                        'apps/worker/src/crons/sweeper.ts',
+                    ),
+                )
+                r2Objects.set('staging/scratch_old.tmp', {
+                    size: 5000,
+                    uploaded: new Date(Date.now() - 48 * 3600 * 1000),
+                })
+                r2Objects.set('staging/scratch_recent.tmp', {
+                    size: 3000,
+                    uploaded: new Date(),
+                })
+                r2Objects.set('stems/canonical.wav', {
+                    size: 100000,
+                    uploaded: new Date(Date.now() - 48 * 3600 * 1000),
+                })
+                const sweepReport: any =
+                    await sweeperMod.purgeOrphanedStagingBuffers(leasedEnv)
+                if (
+                    sweepReport?.status === 'COMPLETED' &&
+                    r2Objects.has('stems/canonical.wav')
+                ) {
+                    await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: `>> [OK] [R2:SWEEPER] Staging sweep complete: ${sweepReport.deletedCount} pruned, ${sweepReport.reclaimedBytes} bytes reclaimed`,
+                    })
+                }
+
+                // 17. Negative control: unleased caller must fail closed
+                const idleActor = makeLeaseActor()
+                const idleEnv = envFor(idleActor)
+                const negRes = await r2Post(idleEnv, '/stems/signed-upload', {
+                    leaseId: 'lease_none',
+                    epoch: 1,
+                    seriesId: 'series_01',
+                    sceneId: 'sc_01',
+                    stemId: 'stem_99',
+                })
+                const negBody: any = await negRes.json()
+                if (
+                    negRes.status === 403 &&
+                    negBody?.error?.code === 'NO_ACTIVE_HARDWARE_LEASE'
+                ) {
+                    await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: `:: [FAIL] [R2:GATE] ${negBody.error.code}: ${negBody.error.message}`,
+                    })
+                }
+            } catch (err: any) {
+                const detail = (err?.message || 'r2 probe failed').slice(0, 120)
+                await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: `:: [FAIL] [R2:GATE] ${detail}`,
+                })
+            }
+
+            // 18. Contention drill: 5-caller simultaneous race (real actor)
+            try {
+                require('tsx/cjs')
+                const raceDoMod = require(
+                    path.resolve(
+                        edgeRoot(),
+                        'apps/worker/src/objects/AudioLeaseDO.ts',
+                    ),
+                )
+                const raceTables: any = {
+                    active_leases: [],
+                    epoch_metadata: [{ id: 1, current_epoch: 1 }],
+                }
+                const raceSql = {
+                    exec: (query: string, ...params: any[]) => {
+                        const q = query.trim().toUpperCase()
+                        if (q.startsWith('SELECT CURRENT_EPOCH')) {
+                            return {
+                                toArray: () => [...raceTables.epoch_metadata],
+                            }
+                        }
+                        if (q.startsWith('SELECT * FROM ACTIVE_LEASES')) {
+                            return {
+                                toArray: () => [...raceTables.active_leases],
+                            }
+                        }
+                        if (q.startsWith('INSERT INTO ACTIVE_LEASES')) {
+                            raceTables.active_leases = [
+                                {
+                                    lease_id: params[0],
+                                    holder_id: params[1],
+                                    line_id: params[2],
+                                    epoch: params[3],
+                                    acquired_at_ms: params[4],
+                                    heartbeat_at_ms: params[5],
+                                    expires_at_ms: params[6],
+                                },
+                            ]
+                            return { toArray: () => [] }
+                        }
+                        if (q.startsWith('DELETE FROM ACTIVE_LEASES')) {
+                            raceTables.active_leases = []
+                            return { toArray: () => [] }
+                        }
+                        if (q.startsWith('UPDATE EPOCH_METADATA')) {
+                            raceTables.epoch_metadata[0].current_epoch =
+                                params[0]
+                            return { toArray: () => [] }
+                        }
+                        if (q.startsWith('UPDATE ACTIVE_LEASES')) {
+                            if (raceTables.active_leases[0]) {
+                                raceTables.active_leases[0].heartbeat_at_ms =
+                                    params[0]
+                                raceTables.active_leases[0].expires_at_ms =
+                                    params[1]
+                            }
+                            return { toArray: () => [] }
+                        }
+                        return { toArray: () => [] }
+                    },
+                }
+                const raceDO = new raceDoMod.AudioLeaseDO(
+                    {
+                        storage: {
+                            sql: raceSql,
+                            setAlarm: async (ms: number) => {},
+                            deleteAlarm: async () => {},
+                        },
+                    },
+                    {},
+                )
+                const raceAcquire = (holderId: string) =>
+                    raceDO.fetch(
+                        new Request('http://localhost/lease/acquire', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                holderId,
+                                lineId: 'race_line',
+                            }),
+                        }),
+                    )
+                const raceResps = await Promise.all([
+                    raceAcquire('race_w1'),
+                    raceAcquire('race_w2'),
+                    raceAcquire('race_w3'),
+                    raceAcquire('race_w4'),
+                    raceAcquire('race_w5'),
+                ])
+                const winners = raceResps.filter((r: any) => r.status === 200)
+                const losers = raceResps.filter((r: any) => r.status === 409)
+                if (winners.length === 1 && losers.length === 4) {
+                    const win: any = await winners[0].json()
+                    await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: `>> [OK] [DO:MUTEX] Granted hardware lease [${win.lease.leaseId}] (Epoch: ${win.lease.epoch})`,
+                    })
+
+                    // 19. Contention rejection receipt (first loser)
+                    const loss: any = await losers[0].json()
+                    if (loss?.error === 'HARDWARE_MUTEX_BUSY') {
+                        await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                            idx: 'cns00',
+                            src: `:: [FAIL] [DO:CONTENTION] ${loss.error}: ${loss.message}`,
+                        })
+                    }
+
+                    // 20. Anti-zombie fencing probe (stale epoch)
+                    const staleRes = await raceDO.fetch(
+                        new Request('http://localhost/lease/heartbeat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                leaseId: win.lease.leaseId,
+                                epoch: win.lease.epoch - 1,
+                            }),
+                        }),
+                    )
+                    const stale: any = await staleRes.json()
+                    if (
+                        staleRes.status === 409 &&
+                        stale?.error === 'ZOMBIE_LEASE_EPOCH'
+                    ) {
+                        await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                            idx: 'cns00',
+                            src: `:: [FAIL] [DO:FENCE] ${stale.error}: ${stale.message}`,
+                        })
+                    }
+
+                    // 21. Watchdog eviction drill (heartbeat silence)
+                    await raceDO.alarm()
+                    const postAlarm: any = await (
+                        await raceDO.fetch(
+                            new Request('http://localhost/lease/status'),
+                        )
+                    ).json()
+                    if (
+                        postAlarm?.isLocked === false &&
+                        typeof postAlarm?.currentEpoch === 'number'
+                    ) {
+                        await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                            idx: 'cns00',
+                            src: `:: [FAIL] [DO:WATCHDOG] Lease revoked due to heartbeat silence (Fenced Epoch: ${postAlarm.currentEpoch})`,
+                        })
+                    }
+                }
+            } catch (err: any) {
+                const detail = (err?.message || 'race probe failed').slice(
+                    0,
+                    120,
+                )
+                await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: `:: [FAIL] [DO:CONTENTION] ${detail}`,
+                })
+            }
+
             await new Promise((resolve) => setTimeout(resolve, 3000))
             break
 

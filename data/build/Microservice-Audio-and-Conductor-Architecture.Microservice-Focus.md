@@ -1,6 +1,2813 @@
 # Branch • Branch • Branch • Microservice Audio and Conductor Architecture
 
-_Gemini · 80 messages · exported Nov 5, 2026_
+_Gemini · 108 messages · exported Nov 5, 2026_
+
+### You
+
+{{FOCUS : from now on [audio-microservice] will be known as [microservice-audio]! how does [microservice-audio] work with [goblin-viewport-template] and [series-sower-conductor] }}
+
+@extreme-detail-without-code-00
+
+### Gemini
+
+The interaction between **microservice-audio**, **series-sower-conductor**, and **goblin-viewport-template** forms the deterministic backbone of the production pipeline, enforcing the governing law that **audio is the architect of time** while picture is an integer projection locked to acoustic duration.
+
+Within this tripartite relationship, **series-sower-conductor** acts as the local orchestrator and temporal pacemaker; **microservice-audio** functions as the speech synthesis daemon and physical clock generator; and **goblin-viewport-template** operates as the downstream metaprogram compiler and digital optical printing layer.
+
+### Hardware Boundary Topology & The Zero-VRAM Invariant
+
+The operational integration of these three systems is strictly governed by physical hardware partitioning to prevent Linux Out-of-Memory crashes, GPU context loss, and multi-tenant tensor collisions:
+
+- **Rig 1 (Orchestration & Acoustic Host):** Operates entirely within multi-core CPU threads and system RAM, maintaining a strict allocation of exactly 0 MB dedicated GPU VRAM. Both **series-sower-conductor** (a POSIX Node.js runtime) and **microservice-audio** (a persistent Python and FastAPI daemon on local loopback port 8000) reside on this host. Downstream, **goblin-viewport-template** executes its final headless Remotion optical compositing here using pure CPU software OpenGL rasterization.
+- **Rig 2 (Isolated GPU Tensor Foundry):** Houses headless ComfyUI instances dedicated entirely to heavy video diffusion passes and LoRA inference. Both **microservice-audio** and Remotion processes are strictly quarantined from Rig 2 silicon to preserve all VRAM for visual plate synthesis.
+- **Turn-Based VRAM Eviction:** If Rig 1 GPU resources are ever utilized for preliminary LLM drafting passes, **series-sower-conductor** issues an automated eviction request to clear all active models from memory within hundreds of milliseconds prior to vocal synthesis, ensuring unconstrained CPU/RAM headroom.
+
+### End-to-End Orchestration & Media Compilation Flow
+
+The lifecycle flows through a deterministic, eight-stage compilation chain that links narrative truth to hardened broadcast media:
+
+```
+[ worker-sower-engine ]
+           │
+           ▼ (Scene Plan & Dialogue AST)
+[ series-sower-conductor ] ──(HTTP POST :8000)──► [ microservice-audio ]
+           │                                             │
+           │ (Physical WAV Durations via ffprobe)         │ (Uncompressed 48 kHz Stems)
+           ▼                                             ▼
+  Temporal Quantization & Exposure Sheet Compilation
+           │
+           ▼ (exposure_sheet.json + dialogue_ast.json)
+[ goblin-viewport-template ] (generator/generate-episode-repo.ts)
+           │
+           ▼ (Metaprogram Source-Baking)
+[ goblin-episodes/epXXX/ ] (Episode_XXX.tsx with Inlined Integer Literals)
+           │
+           ▼ (Headless Remotion CLI --gl=swangle, 0 MB VRAM)
+[ Master Broadcast MP4 Deliverable ]
+```
+
+### Operational Domain 1: series-sower-conductor Driving microservice-audio
+
+The Conductor treats generated speech not as sound effects to be laid down after animation, but as the non-negotiable physical clock that dictates video durations.
+
+#### 1. Contract Ingestion & Somatic DSP Translation
+
+- **AST Ingestion:** **series-sower-conductor** ingests the validated narrative contract from the upstream engine, extracting spoken dialogue lines, speaker IDs, and emotional condition tags.
+- **Biological Trauma Translation:** Upstream biological conditions and narrative trauma logged in the canonical ledger are translated algebraically into dynamic Digital Signal Processing (DSP) modifiers. Characters suffering pulmonary or respiratory trauma receive elevated breathiness pause multipliers, dilated breath cadence scalars, and subharmonic vocal fry density.
+- **Network Client Interface:** The Conductor’s speech unit dispatches these parameters alongside verbatim phonetic dialogue text over HTTP POST to **microservice-audio** at its local port 8000 interface.
+
+#### 2. Synthesis Mechanics Inside microservice-audio
+
+- **Persistent Daemonization:** **microservice-audio** remains warm in memory to avoid per-line cold-boot latency, keeping neural vocoder checkpoints and speaker reference embeddings loaded.
+- **Series-Scoped Namespace Isolation:** To prevent cross-universe acoustic contamination between different narrative worlds, **microservice-audio** partitions character reference WAV files, custom dialect lexicons, and engine recipe manifests at the root by series slug.
+- **Engine Multiplexing:** Based on the series recipe, the microservice routes the request across distinct neural synthesis engines (such as CosyVoice, Parler-TTS, XTTSv2, or Piper) and conditioning strategies (zero-shot cloning, internal speaker index lookup, descriptive natural language prompts, or latent speaker vectors).
+- **DSP Vocal Tract Warping:** To prevent characters from sounding like generic foundational model presets, algebraic pitch shifts and formant warping factors are applied at the DSP level to sculpt non-human anatomies without runtime overhead.
+
+#### 3. Verification & Loudness Certification Gauntlet
+
+Before any synthesized stem is accepted by **series-sower-conductor**, **microservice-audio** subjects the linear PCM audio stream to an automated validation pipeline:
+
+- **Zero-Byte Buffer Sentinel:** Audio streams under 1024 bytes or failing valid RIFF WAV header verification are rejected immediately.
+- **Speech-to-Text Alignment Gate:** An automated transcription pass compares the synthesized audio against the source screenplay AST; dropped words or model hallucinations immediately halt pipeline progression.
+- **EBU R128 Loudness Conformance:** Stems are normalized to an integrated -16.0 LUFS target for web distribution (or -24.0 LUFS for broadcast).
+- **True-Peak Clamping:** Brickwall limiters enforce a strict True-Peak ceiling clamped at -1.0 dBTP to eliminate inter-sample clipping.
+- **Acoustic Noise Floor:** All dialogue stems must maintain an acoustic noise floor below -60 dB to prevent background hiss during dialogue pauses.
+- **Content-Addressed Immutability:** Certified 48 kHz uncompressed stems are written to scratch storage using cryptographic hashes, establishing immutable assets that rendering engines are forbidden from re-triggering during visual compositing.
+
+### Operational Domain 2: series-sower-conductor Compiling the Master Temporal Clock
+
+Once uncompressed dialogue stems are delivered by **microservice-audio**, **series-sower-conductor** converts continuous sound waveforms into discrete video timelines:
+
+#### 1. Discrete 24 fps Integer Quantization
+
+Because continuous acoustic sound exists in milliseconds while video delivery operates in discrete animation frames, the Conductor spawns an asynchronous `ffprobe` child process to read the exact duration of each synthesized WAV file.
+
+The exact frame budget is derived using the non-negotiable ceiling quantization formula:
+
+$$
+\text{target\_frames} = \left\lceil \left(\frac{\text{duration\_ms}}{1000}\right) \times 24 \right\rceil
+$$
+
+If a dialogue stem measures 3,120 milliseconds, the Conductor pins the visual timeline allocation to exactly 75 frames. Video and visual models are never prompted for vague durations; they are ordered to populate precise frame counts, eliminating temporal rubber-banding.
+
+#### 2. Monotonic Timeline Accumulation & Drift Elimination
+
+To prevent cumulative fractional frame drift caused by sequential rounding, **series-sower-conductor** calculates absolute integer start indices across all shots:
+
+$$
+\text{fromFrame}_k = \sum_{i=1}^{k-1} \text{total\_shot\_frames}_i
+$$
+
+Each visual shot and dialogue sequence begins at an explicit, pre-calculated global frame offset.
+
+#### 3. Causal VAE Lattice Alignment
+
+For shots requiring generative video diffusion plates, the Conductor’s model adapter conforms the locked 24 fps frame budget to the 3D causal VAE lattice required by models like Wan:
+
+$$
+\text{diffusion\_allocation} = 4 \times \left\lceil \frac{N - 1}{4} \right\rceil + 1
+$$
+
+The Conductor allocates the native diffusion lattice frames and pre-calculates the exact tail-trim margin required to resample the resulting plate back into the locked 24 fps dialogue window.
+
+#### 4. Dynamic Sidechain Ducking & Foley Assembly
+
+Inside its audio unit, **series-sower-conductor** synthesizes the broader acoustic scene geometry and serializes the complete specification into `exposure_sheet.json`:
+
+- **Automated Sidechain Ducking:** Calculates a dynamic attenuation curve that dips continuous ambient sound beds and score cues by -14 dB during dialogue windows using a 6-frame quadratic attack, releasing back to baseline over a 12-frame quadratic curve during dialogue pauses. Anti-pumping algorithms clamp gain recovery during short conversational pauses under 8 frames.
+- **Deterministic Foley Transient Seeding:** Punctual sound effects (footsteps, wet coughs, mechanical scrapes) are seeded across pre-roll windows and impact beats using a MurmurHash3 pseudorandom generator keyed to scene and shot identifiers, ensuring bit-identical acoustic repeatability across distributed render workers.
+
+### Operational Domain 3: series-sower-conductor Bridging to goblin-viewport-template
+
+With the physical master clock and exposure sheet locked, **series-sower-conductor** passes execution to **goblin-viewport-template**.
+
+#### 1. Rejection of the Runtime Player Model
+
+Earlier rendering approaches treated the viewport as a long-lived application that dynamically imported scene JSON files at runtime. This introduced the **historical corruption trap**: when generic React components or camera damping curves were modified months later for newer episodes, re-rendering earlier episodes caused silent regressions, such as mouth visemes detaching from chins or camera zooms decapitating characters.
+
+**goblin-viewport-template** resolves this vulnerability by functioning as an **offline code-generation compiler and scaffolding metaprogram**. The template repository itself is never executed directly to render broadcast media; instead, its generator script stamps out an isolated, self-contained workspace inside `goblin-episodes/` per production cycle.
+
+#### 2. The Metaprogram Compiler Invocation
+
+The Conductor invokes the generator within **goblin-viewport-template** as an automated process, passing the compiled narrative AST and timing manifest:
+
+- **Target Scaffolding:** Copies canonical React and Remotion presentation primitives into a dedicated directory.
+- **Selective Asset Harvesting:** Runs an asset collector that parses the AST to copy *only* the specific sprites, mouth shapes, background mattes, and synthesized dialogue stems needed for that episode into the episode folder, slashing project storage by roughly 90% to maintain a sub-100MB footprint.
+- **Cryptographic Dependency Locking:** Emits an immutable manifest recording toolchain binary versions, audio/visual file SHA-256 digests, and upstream Git commit hashes to guarantee that any episode can be re-rendered years later with bit-identical fidelity.
+
+### Operational Domain 4: Source-Baking & Multi-Track Execution in goblin-viewport-template
+
+Inside the stamped episode workspace created by **goblin-viewport-template**, runtime data iteration is completely eliminated. The generator burns the outputs of **microservice-audio** and **series-sower-conductor** directly into static TypeScript JSX literals.
+
+| Architectural Domain | Upstream Derivation | Implementation in Stamped Episode Component |
+| --- | --- | --- |
+| **Sequence Timing** | `ffprobe` quantization over **microservice-audio** WAV stems | Inlined as raw, unquoted integer numeric literals on Remotion Sequence components, bypassing runtime string-to-number parsing. |
+| **Timeline Placement** | Absolute frame accumulator calculated by **series-sower-conductor** | Stamped as static frame offsets, ensuring sequences execute in parallel or sequence without chained runtime dependencies. |
+| **Audio Routing** | Discrete 48 kHz stems synthesized by **microservice-audio** | Pinned directly to immutable relative static asset paths within the local bundle. |
+| **Acoustic Ducking** | Quadratic attack/release sidechain curves computed in Conductor | Hardcoded lookup tables and linear interpolation volume curves bound directly to ambient and score track audio tags. |
+| **Mouth Viseme Rhythms** | Audio amplitude envelopes extracted from dialogue stems | Frame-synchronized viseme keyframe arrays driving cutout puppet mouth layer swaps across idle, small, medium, and wide configurations. |
+| **Camera Kinematics** | Directorial vectors and character anatomical anchor targets | Precomputed canvas coordinate percentages inlined into camera wrapper transformOrigin properties, preventing runtime layout thrashing. |
+
+#### Multi-Track Remotion Composition Architecture
+
+When headless Remotion renders the stamped composition, the audio stems synthesized by **microservice-audio** orchestrate three prioritized, parallel layers in the optical tree:
+
+1. **Dialogue Track (Highest Priority):** Discrete uncompressed linear PCM dialogue stems pinned to precomputed start frames. This track dictates character mouth viseme triggering and serves as the master sidechain trigger.
+2. **Spot Foley Track (Medium Priority):** Punctual sound effects mounted using sequence offset windows, triggered during pre-roll frames or active speech timestamps according to the Conductor's exposure sheet.
+3. **Continuous Sound Bed & Score (Low Priority / Ambient):** Environmental drones, room tones, and musical cues running continuously beneath the scene, dynamically attenuated by -14 dB whenever the dialogue track is active.
+
+Once optical compositing completes via software OpenGL rasterization, the final master MP4 deliverable is sealed, and **series-sower-conductor** executes an atomic, signed Git commit to record the episode's state mutations permanently into the canonical ledger.
+
+### You
+
+what comes out of [microservice-audio] what are the artifacts of [microservice-audio]
+
+what are the technical mechanisms which allows to communicate with [series-sower-conductor] and [ goblin-viewport-template]
+
+these are the repos [https://github.com/slopratchet/000.StyleTTS-2] and [https://github.com/slopratchet/000.parler-talk] and others like them which [microservice-audio] will interact with; check out the compile text of the whole repo in the notebook under [000.microservice-audio] and figure out how [microservice-audio] can interact and use these python code bases from a node.js app
+
+### Gemini
+
+The operational role of **microservice-audio** is to translate abstract screenplay dialogue contracts into hardened acoustic reality, acting as the physical clockmaker whose output dictates the timeline for the entire production pipeline.
+
+### Artifacts of microservice-audio
+
+The outputs produced by **microservice-audio** span physical sound containers, cryptographically verified timing receipts, and downstream integration manifests:
+
+#### 1. The Physical Acoustic Stem (.wav)
+
+The primary binary artifact emitted for every dialogue line is an uncompressed, linear Pulse-Code Modulation (PCM) audio stem committed directly to local NVMe scratch storage (e.g., `public/audio/dialogue/${sceneId}_SH${shotIndex}.wav` or `scratch/audio/dialogue/${lineId}.wav`):
+
+- **Sampling Rate & Bit Depth:** Exactly 48,000 Hz (48 kHz) at 24-bit linear PCM resolution. Lossy intermediate formats (MP3, AAC) and variable sample rates are strictly forbidden to eliminate sample jitter.
+- **Channel Layout:** Discrete mono or centered stereo stems without baked room reverb or spatial panning, allowing spatialization to be managed downstream during scene assembly.
+- **Broadcast Loudness Compliance:** Every stem is calibrated through an automated DSP pass to an integrated target of **-16.0 LUFS** ($\pm 1.0$ LUFS) for web delivery or **-24.0 LUFS** for television broadcast.
+- **True-Peak & Noise Floor Ceilings:** Clamped with a brickwall ceiling at **-1.0 dBTP** to prevent inter-sample clipping on consumer DACs, maintaining an unvoiced background noise floor strictly below **-60 dBFS**.
+
+#### 2. The Cryptographic Timing & Verification Receipt (JSON Payload)
+
+Alongside the binary audio file, **microservice-audio** returns a strongly typed metadata response payload (`TTSClientResponse` / `TTSGenerationResponse`) that seals the acoustic properties of the line:
+
+- **`shot_id` / `line_id`:** The deterministic identity string referencing the specific beat in the screenplay AST.
+- **`stem_relative_path`:** The concrete relative filesystem path to the committed audio file.
+- **`sha256_hash`:** A 64-character lowercase hexadecimal digest computed over the raw binary content of the `.wav` file, guaranteeing content-addressed immutability.
+- **`duration_ms`:** The physical duration of the spoken waveform measured to millisecond precision.
+- **`sample_rate_hz` & Telemetry:** Physical confirmation of 48,000 Hz, integrated LUFS score, True-Peak dBTP, and unvoiced noise floor measurements.
+
+#### 3. Pod Contract Artifacts & Manifest Seals
+
+Under studio pod architecture (POD-05: Audio Pod), the service publishes two immutable deliverables to shared storage (Cloudflare R2 or local scratch):
+
+- **Conformed Stem Asset:** The finalized `.wav` binary.
+- **Timecode / Viseme Map:** A sidecar document capturing speech energy envelopes, phoneme timings, and amplitude contours used downstream to drive mouth viseme frame swaps.
+- **Provenance Entry in `render_manifest.json`:** Downstream build tools capture the SHA-256 digest of each stem into the immutable Directed Acyclic Graph (DAG), freezing the exact audio files against the upstream screenplay AST and git commit hashes.
+
+### Technical Mechanisms for Communication
+
+The communication topology links **microservice-audio** to **series-sower-conductor** and **goblin-viewport-template** across distinct execution phases without permitting direct runtime coupling between the audio daemon and the video renderer.
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│ RIG 1: Host CPU & System RAM (0 MB GPU VRAM Invariant)                 │
+│                                                                        │
+│  [ series-sower-conductor ]                                            │
+│    │  (Node.js / ttsClient.ts)                                         │
+│    │                                                                   │
+│    ├── HTTP POST (:8000/generate) ──► [ microservice-audio ]           │
+│    │                                    (Python / FastAPI Warm Daemon) │
+│    │                                    • CosyVoice / Parler / StyleTTS│
+│    │                                    • Formant & Somatic DSP        │
+│    │                                    • Loudness & True-Peak Clamping│
+│    │                                    • Posix Atomic .tmp Rename     │
+│    │                                              │                    │
+│    │◄── JSON Timing Receipt & 48kHz WAV ──────────┘                    │
+│    │                                                                   │
+│    ├── ffprobe Child Process: target_frames = ⌈(ms / 1000) * 24⌉      │
+│    ├── Sidechain Ducking Math (-14 dB Speech Window)                   │
+│    └── Assembles exposure_sheet.json + dialogue_ast.json               │
+│                                                                        │
+│    Spawns Metaprogram Child Process:                                   │
+│    tsx generator/generate-episode-repo.ts                              │
+│    │                                                                   │
+│    ▼                                                                   │
+│  [ goblin-viewport-template ] (Compiler Engine)                        │
+│    │                                                                   │
+│    ├── Prunes assets & vendors React/Remotion primitives               │
+│    ├── Source-Bakes Episode_XXX.tsx (Inlines integer frames & audio)   │
+│    └── Provenance Lock: render_manifest.json                           │
+│                                                                        │
+│  [ Remotion Headless Render ] (--gl=swangle, Software Rasterization)   │
+│    └── Master Broadcast MP4 Deliverable                                │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 1. Communication Between series-sower-conductor and microservice-audio
+
+Communication between the Node.js conductor runtime and the Python audio service operates as an out-of-process, loopback network client relationship:
+
+- **Wire Protocol & Endpoint:** Asynchronous REST over HTTP POST targeting `[http://127.0.0.1:8000/generate](http://127.0.0.1:8000/generate)`.
+- **Typed Ingress Schema (`TTSGenerationRequest`):** The Conductor's speech unit (`src/audio/ttsClient.ts` / `09.speech.unit/buz/speech.buzz.ts`) serializes the request into a strictly validated Zod/Pydantic contract containing `series_id`, `character`, verbatim phonetic `text`, `emotion`, `tonePacing`, and dynamic `dsp_modifiers` (`pause_frequency_multiplier`, `breathinessPauseMultiplier`, `basePitchShiftSemitones`, `formantWarpingFactor`, `vocalFryDensity`).
+- **Atomic POSIX Staging:** To prevent race conditions or half-written buffers caused by network socket drops, **microservice-audio** writes raw streams to a temporary sandbox path (`ep040_sh01.wav.tmp`). Only after the file passes the Zero-Byte Poison Buffer Sentinel (verifying length $> 1024$ bytes and valid `RIFF`/`WAVE` headers) and loudness certification does it execute an atomic POSIX `fs.renameSync()` to promote the file to its final destination.
+- **Fault Isolation & Retries:** The Conductor wraps single-line requests in an isolated, 3-attempt exponential backoff retry loop ($\text{delayMs} = 100 \times 2^{\text{attempt} - 1}$). A failure on line $k$ never invalidates stems successfully rendered for lines $1 \dots k-1$.
+
+#### 2. Bridging series-sower-conductor to goblin-viewport-template
+
+**microservice-audio** does not communicate with **goblin-viewport-template** directly. Instead, **series-sower-conductor** converts the continuous acoustic signals into discrete video instructions:
+
+- **ffprobe Master Clock Quantization:** The Conductor spawns a local `ffprobe` child process to extract `duration_ms` from the newly committed WAV header. It converts milliseconds into locked 24 fps integer frames using non-negotiable ceiling arithmetic:
+  $$
+  \text{target\_frames} = \left\lceil \left(\frac{\text{duration\_ms}}{1000}\right) \times 24 \right\rceil
+  $$
+- **Exposure Sheet Compilation:** Absolute frame start positions ($\text{fromFrame}_k = \sum \text{duration}_i$), -14 dB sidechain ducking volume curves, and Foley timestamps are serialized into `exposure_sheet.json`.
+- **Metaprogram Compiler Invocation:** The Conductor invokes the template's generator script (`tsx ../goblin-viewport-template/generator/generate-episode-repo.ts`) via child process CLI, passing the scene AST and exposure sheet.
+- **Static Source-Baking:** The viewport template stamps out an autonomous episode workspace inside `goblin-episodes/epXXX/`. It copies the `.wav` files into the episode's static asset bundle and bakes the integer start frames, durations, and audio paths directly into `Episode_XXX.tsx` as raw TypeScript JSX literals on `<Sequence>` and `<Audio>` nodes.
+- **Rendering Lockdown:** When headless Remotion renders the timeline (`--gl=swangle`), it reads only the static, committed local audio files. The rendering runtime is strictly forbidden from making live network calls back to **microservice-audio**.
+
+### Bridging Python Runtimes (StyleTTS-2, parler-talk) into the Node.js Architecture
+
+The compiled repository architecture revealed in `000.microservice-audio.txt` demonstrates that **microservice-audio** is structured as a TypeScript/Node.js monorepo containing an edge control plane (Cloudflare Worker with Durable Objects) and a Candor 7-file state machine (`packages/700.microserviceaudio/`).
+
+However, advanced neural TTS engines like [slopratchet/000.StyleTTS-2](https://github.com/slopratchet/000.StyleTTS-2) and [slopratchet/000.parler-talk](https://github.com/slopratchet/000.parler-talk) require native PyTorch tensor execution, CUDA/C++ extensions, monotonic alignment search, and heavy neural vocoders that cannot run natively inside V8 or Node.js.
+
+To connect the Node.js monorepo with these Python repositories, the system deploys a **hybrid Daemon-Proxy and Monorepo Candor Adapter architecture**:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│ NODE.JS / TYPESCRIPT MONOREPO HOST                                     │
+│                                                                        │
+│ apps/995.library (Blessed TUI) / apps/worker (Cloudflare Hono Gateway) │
+│                                  │                                     │
+│ packages/700.microserviceaudio/  │ (Candor BEE Architecture)           │
+│ ├── 00.microserviceaudio.unit    ├── 10.generate.unit                  │
+│ ├── 01.loudness.unit             ├── 12.acoustic.unit                  │
+│ ├── 07.service.unit (Supervisor) ├── 14.conditioning.unit              │
+│ ├── 08.schemas.unit (Contracts)  └── 99.bus.unit (Event Bus / MQTT)    │
+└──────────────────────────────────┬─────────────────────────────────────┘
+                                   │
+                    Loopback REST / IPC Socket
+                    POST http://127.0.0.1:8000/generate
+                                   ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│ PERSISTENT PYTHON INFERENCE DAEMON (FastAPI server.py on Port 8000)     │
+│                                                                        │
+│ engines/base.py (BaseTTSEngine Abstract Polymorphic Factory)           │
+│                                  │                                     │
+│       ┌──────────────────────────┴──────────────────────────┐          │
+│       ▼                                                     ▼          │
+│ ┌───────────────────────────┐         ┌───────────────────────────┐    │
+│ │ 000.StyleTTS-2            │         │ 000.parler-talk           │    │
+│ │ (StyleTTS2Engine Wrapper) │         │ (ParlerEngine Wrapper)    │    │
+│ │ • Precomputed style .pt   │         │ • Description prompt text │    │
+│ │ • Latent diffusion pitch  │         │ • Syllable stress caps    │    │
+│ │ • Sub-100ms RTF ≤ 0.15x   │         │ • Cross-attention decoder │    │
+│ └─────────────┬─────────────┘         └─────────────┬─────────────┘    │
+│               └──────────────────────┬──────────────┘                  │
+│                                      │ Raw float32 PCM numpy stream    │
+│                                      ▼                                 │
+│         Dynamic DSP Post-Processing Channel (Formants, Limiters)       │
+│                                      │                                 │
+│                                      ▼                                 │
+│        Atomic NVMe Write: scratch/audio/dialogue/${lineId}.wav         │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 1. The Persistent Warm Daemon Strategy (Why CLI Child Processes are Banned)
+
+Spawning a Python process via `child_process.execFile('python', ['synthesize.py', ...])` for each line of dialogue would force Python to re-import PyTorch, re-read multi-gigabyte neural checkpoints from disk, allocate memory pools, and re-initialize vocoders on every sentence. This incurs 5 to 15 seconds of cold-boot latency per utterance.
+
+Instead, **microservice-audio** maintains a persistent Python web daemon (`server.py`) running FastAPI on `[http://127.0.0.1:8000](http://127.0.0.1:8000)` on Rig 1:
+
+- Neural model checkpoints for StyleTTS-2 and Parler-TTS remain warm in system RAM.
+- The process operates under an absolute **0 MB GPU VRAM Invariant**, setting `CUDA_VISIBLE_DEVICES=""` to enforce pure CPU multi-threaded inference using AVX-512 vectorization, preserving all workstation VRAM for Rig 2 visual rendering.
+- An LRU memory cache limits active resident models to a strict **8.0 GB RAM ceiling**, evicting unused engines via explicit `gc.collect()` when swapping universes.
+- An internal `asyncio.Lock()` serializes speech inference to ensure thread safety, preventing CPU contention and timing jitter.
+
+#### 2. Polymorphic Engine Adapters (`engines/base.py`)
+
+Within the Python daemon, the external repositories are integrated as specialized subclasses inheriting from an abstract base interface (`BaseTTSEngine`):
+
+- **Wrapping `000.StyleTTS-2` (`StyleTTS2Engine`):**
+  - **Conditioning Mechanism:** StyleTTS-2 utilizes style vector tensors representing the target voice geometry. The adapter loads precomputed style vectors (`.pt`) referenced in `voice_manifest.json`.
+  - **Latent Pitch Prediction:** The engine runs StyleTTS-2's internal latent diffusion model to predict fundamental frequency ($F_0$) contours and energy dynamics prior to vocoding.
+  - **Execution Profile:** Delivers ultra-low latency inference ($\text{RTF} \le 0.15\times$, sub-100 ms execution), making it ideal for snappy dialogue, crowd reactions, and synthetic communications.
+- **Wrapping `000.parler-talk` (`ParlerEngine`):**
+  - **Natural Language Conditioning:** Parler-TTS uses a dual-decoder autoregressive transformer conditioned directly on natural language descriptions.
+  - **Prompt Synthesis:** The adapter translates incoming emotional condition tags (e.g., `tense_jaw`, `humiliated`) and acoustic modifiers into descriptive text prompts (e.g., *"A raspy, low-pitched male voice speaking in a hurried whisper with slight vocal fry in a dry room"*).
+  - **Cross-Attention Decoding:** This prompt is processed by the text attention encoder to modulate the audio decoder layers dynamically, altering vocal cadence without requiring manual vocoder retraining.
+
+#### 3. Mapping Node.js Candor Units to Python Execution
+
+Inside the Node.js repository (`packages/700.microserviceaudio/`), the system manages and talks to the Python codebases through distinct functional units:
+
+- **`07.service.unit` (Daemon Supervisor):** Manages the lifecycle of the Python process. It can verify that port 8000 is listening, execute health pings against `[http://127.0.0.1:8000/health](http://127.0.0.1:8000/health)`, and handle startup/teardown commands.
+- **`08.schemas.unit` & `14.conditioning.unit`:** Prepares the payload contract, resolving character identifiers against `voices/<series>/voice_manifest.json` and injecting somatic basis-point math.
+- **`10.generate.unit` (`buz/generate.buzz.ts`):** Dispatches the typed HTTP POST request to the Python daemon, receives the raw audio buffer or file descriptor, executes the Zero-Byte Poison Buffer Sentinel Gate, and handles retries.
+- **`01.loudness.unit` & `02.peaks.unit`:** Inspects the returned stream using local Node.js audio decoders or `ffprobe` to verify the stem achieves $-16.0\text{ LUFS}$ integrated loudness and $-1.0\text{ dBTP}$ true-peak conformance before promoting the file to the conductor.
+- **`99.bus.unit`:** Publishes completion receipts across the internal RxJS/MQTT bus, allowing the terminal dashboard (`apps/995.library`) and the episode orchestrator (`produceEpisode.ts`) to immediately update progress bars and proceed to video quantization.
+
+### You
+
+i do not want to use [PERSISTENT PYTHON INFERENCE DAEMON (FastAPI server.py on Port 8000)] i want to use something which is native to Node.JS
+
+something like [child_process.execFile('python', ['synthesize.py', ...])] and have Node.js poll for when the wave file comes out and make sure its part of a unit in [000.microservice-audio]; the five to ten second extra is not big deal at this stage; ill speed stuff up later;
+
+now under [Communication Between series-sower-conductor and microservice-audio] remember that [ 000.microservice-audio ] has a BLESSED terminal User Interface; [series-sower-conductor] should manipulate that interface
+
+### Gemini
+
+### The Native Node.js Ephemeral Subprocess Architecture
+
+Transitioning **microservice-audio** away from a persistent HTTP web daemon to a native Node.js process orchestration model replaces network sockets with direct OS-level process management. Instead of relying on an always-on web server bound to local loopback ports, the Node.js runtime leverages native system primitives (`child_process.execFile` or `child_process.spawn`) to invoke isolated, one-shot Python execution scripts on demand.
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│ NODE.JS MONOREPO HOST (Rig 1 CPU & System RAM)                         │
+│                                                                        │
+│  [ series-sower-conductor ] (packages/400.conductor)                   │
+│         │                                                              │
+│         │ 1. Programmatic Hunt Dispatch / Blessed TUI Manipulation     │
+│         ▼                                                              │
+│  [ microservice-audio ] (packages/700.microserviceaudio)               │
+│         │                                                              │
+│         ├── 10.generate.unit: Invokes child_process.execFile           │
+│         │                     ("python", ["synthesize.py", ...])       │
+│         │                                                              │
+│         ├── Filesystem Polling Watcher: Non-blocking async interval    │
+│         │                               polls for .tmp stabilization   │
+│         │                                                              │
+│         ├── Validation & Conformance Chain:                            │
+│         │   ├── 01.loudness.unit (Integrated -16.0 LUFS Audit)         │
+│         │   ├── 02.peaks.unit    (Clamped -1.0 dBTP True-Peak)         │
+│         │   └── 06.transcription.unit (Whisper / G2P Parity Guard)     │
+│         │                                                              │
+│         └── 97.collect.unit: Commits stem & emits SHA-256 receipt      │
+│                                                                        │
+│  [ apps/995.library ] (Blessed Terminal Cockpit Engine)                │
+│         │                                                              │
+│         ├── 81.grid.unit: 12x12 Cartesian screen partitioning          │
+│         ├── 85.choice.unit / 98.menu.unit: Keyboard-driven menu tree   │
+│         └── 83.console.unit: cns00 real-time ASCII telemetry stream    │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+### Executing Python Neural Codebases via Ephemeral Subprocesses
+
+The external Python repositories—such as StyleTTS-2 and parler-talk—are wrapped by dedicated CLI entrypoint scripts (e.g., `synthesize.py` or `engine_runner.py`). When speech synthesis is requested, Node.js manages execution through an asynchronous lifecycle:
+
+#### 1. Command-Line Argument Serialization & Context Injection
+
+Node.js constructs an argument vector passing all necessary synthesis parameters directly to the Python interpreter:
+
+- **Engine Selector Flag:** Declares whether the underlying invocation will load the StyleTTS-2 diffusion pipeline or the Parler-TTS cross-attention decoder.
+- **Phonetic Text String:** The sanitized, verbatim screenplay dialogue line, pre-processed to expand dialect abbreviations, numerals, and custom lexicon entries.
+- **Speaker Reference Identity:** The relative path to the character’s reference audio waveform within the series-scoped asset folder, or an explicit pre-extracted style latent tensor.
+- **Somatic DSP Modifiers:** Serialized numeric flags representing biological trauma or emotional strain, including pitch shift semitones, formant warping percentages, breathiness pause ratios, and vocal fry density.
+- **Deterministic Destination Target:** The target output filesystem path, designated with an ephemeral staging extension (`.tmp`).
+
+#### 2. Subprocess Execution & Process Isolation
+
+- **Execution Boundary:** Node.js executes the Python process under strict resource constraints, enforcing zero GPU VRAM allocation by explicitly passing an empty environment variable for visible graphics devices (`CUDA_VISIBLE_DEVICES=""`).
+- **Thread Budgeting:** The subprocess is assigned a fixed pool of multi-threaded CPU cores to prevent one-shot neural tensor calculations from starving the Node.js event loop.
+- **Cold-Boot Tolerance:** While initial PyTorch importing, weights loading, and vocoder initialization add 5 to 10 seconds of startup latency per execution run, the process runs completely disconnected from long-lived port bindings, eliminating memory leaks, port collisions, and background zombie daemons.
+
+### Atomic Staging, Stabilization Detection, and Polling Architecture
+
+To prevent race conditions where downstream video animators or optical compositors attempt to read an audio file that Python is still actively writing to disk, Node.js uses an **atomic file stabilization and polling protocol**:
+
+#### 1. The Atomic POSIX Sandbox Extension
+
+The Python script is forbidden from writing directly to the final production path (such as `ep01_sh01.wav`). Instead, it writes strictly to a temporary staging path (such as `ep01_sh01.wav.tmp`).
+
+#### 2. Non-Blocking Event Loop Polling
+
+Instead of blocking execution with synchronous sleep loops, the responsible Node.js unit initiates a recurring asynchronous tick timer using non-blocking timeouts or interval loops scheduled across the JavaScript event loop:
+
+- **File Existence Probe:** On every timer tick (e.g., every 150 to 250 milliseconds), Node.js queries the file system to verify whether the staging file has appeared on disk.
+- **Byte-Size Stabilization & Inode Quiescence:** Once the file exists, polling tracks its byte size across consecutive checks. If the file size changes between checks, Python is still actively flushing audio buffers. The file is considered physically sealed only when its byte size remains identical across consecutive polling intervals and the Python child process exits cleanly with return code 0.
+- **Timeout & Deadlock Guardrails:** A circuit breaker terminates the watcher if the file fails to stabilize within a preconfigured window (e.g., 30 seconds), preventing orphaned processes from hanging pipeline automation.
+
+#### 3. Atomic POSIX Promotion
+
+Once the temporary file is closed and verified, Node.js triggers an atomic POSIX rename system call, instantly promoting `ep01_sh01.wav.tmp` to `ep01_sh01.wav`. Because POSIX rename operations are atomic at the operating system kernel level, no downstream reader can ever observe a partial, zero-byte, or corrupted stem.
+
+### Unit Integration Inside packages/700.microserviceaudio
+
+Within the Candor architectural pattern of **microservice-audio**, each stage of process spawning, polling, and signal verification is partitioned across specialized, decoupled units:
+
+| Functional Unit | Operational Responsibility in Subprocess Pipeline |
+| --- | --- |
+| **`10.generate.unit`** | **Subprocess Spawner & Polling Overseer:** Ingests synthesis actions, spawns `python synthesize.py` with the serialized argument vector, schedules the non-blocking polling ticks, verifies file size stabilization, and executes the atomic POSIX rename. |
+| **`01.loudness.unit`** | **EBU R128 Loudness Certification:** Inspects the conformed audio file using headless duration analyzers or native decoders to verify that integrated loudness lands precisely at the -16.0 LUFS web standard (or -24.0 LUFS broadcast target). |
+| **`02.peaks.unit`** | **True-Peak & Clamping Sentry:** Scans waveform amplitudes to guarantee that no sample or inter-sample peak exceeds the mandatory -1.0 dBTP ceiling, rejecting stems that threaten DAC clipping. |
+| **`06.transcription.unit`** | **Speech Alignment Verification:** Dispatches a rapid acoustic-to-text verification pass (or compares phoneme timing envelopes) against the source screenplay AST to ensure words were not truncated or hallucinated during inference. |
+| **`13.audio.unit` & `12.acoustic.unit`** | **Acoustic Profiling:** Resolves character voice profiles, selects whether the target recipe calls for StyleTTS-2 or Parler-TTS, and translates narrative emotion tags into exact somatic DSP parameters. |
+| **`97.collect.unit`** | **Asset Ledger & Cryptographic Sealing:** Computes the SHA-256 hash of the stabilized audio stem, records its precise duration in milliseconds, and indexes the stem into the local repository collection. |
+| **`98.menu.unit`** | **Blessed Cockpit Surface:** Renders operator choices, visual progress indicators, and menu navigation states for the terminal user interface. |
+| **`99.bus.unit`** | **Internal State Bus:** Routes RxJS/BehaviorSubject event packets (`sim.hunt`) across all units and mirrors state updates to the terminal console. |
+
+### series-sower-conductor Manipulating the microservice-audio Blessed TUI
+
+The user interface of **microservice-audio** is built on the Blessed curses framework hosted inside `apps/995.library`. The display is organized around a strict **12x12 Cartesian grid layout** (`81.grid.unit`), a **keyboard choice axis** (`85.choice.unit` and `98.menu.unit`), and a **scrollable switchboard console** (`83.console.unit`, identified as `cns00`).
+
+Because **series-sower-conductor** and **microservice-audio** coexist within the same workstation ecosystem, the Conductor does not need network sockets to drive the audio microservice. It manipulates **microservice-audio**'s Blessed interface directly using three internal architectural mechanisms:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│ BLESSED TERMINAL COCKPIT (apps/995.library on Rig 1)                   │
+├───────────────────────────────┬────────────────────────────────────────┤
+│ 98.menu.unit (Choice Axis)    │ 83.console.unit (Telemetry Console)    │
+│ Grid: {x:0, y:4, w:4, h:8}    │ Pane: cns00 {x:4, y:0, w:8, h:12}      │
+├───────────────────────────────┼────────────────────────────────────────┤
+│                               │                                        │
+│  [1] SYNTHESIZE SCENE AUDIO   │ >> [CONDUCTOR] Intercepting Audio TUI  │
+│  [2] TEST ACOUSTIC PIPELINE   │ >> [AUDIO:GENERATE] Spawning Python... │
+│  [3] AUDIT STEM LOUDNESS      │ >> [SUBPROCESS] synthesize.py (PID)    │
+│  [4] INSPECT AUDIO COLLECT    │ >> [POLL] Waiting for stem.wav.tmp...  │
+│  [5] ROOT MENU                │ >> [POLL] Size stable: 144,044 bytes   │
+│                               │ >> [ATOMIC] Renamed to stem.wav [OK]   │
+│  ▲ Conductor programmatically │ >> [LOUDNESS] -16.0 LUFS verified [OK] │
+│    drives selection cursor    │ >> [CONDUCTOR] Master clock locked     │
+│                               │                                        │
+└───────────────────────────────┴────────────────────────────────────────┘
+```
+
+#### 1. Programmatic Action Injection via the Shared Pivot Bus
+
+The runtime environment initializes a global pivot registry where every loaded domain package is exposed through its canonical identifier (`global.MICROSERVICEAUDIO` and `global.PIVOTS['microserviceaudio']`).
+
+- When **series-sower-conductor** needs to trigger audio generation, its internal speech orchestrator dispatches actions directly into **microservice-audio**'s event bus using the `hunt` dispatch method.
+- Rather than requiring manual human keystrokes, the Conductor submits a strongly typed action payload containing the target scene AST and line identifiers.
+- This dispatch activates `10.generate.unit`, which triggers child process spawning while automatically advancing the internal state machine of **microservice-audio**.
+
+#### 2. Telemetry Ingestion and Driving the Console Surface (cns00)
+
+The primary operator-facing telemetry pane in the Blessed interface is the green-bordered switchboard console (`cns00`). The Conductor programmatically interacts with this display through the library's console actions:
+
+- **Pipeline Initialization Receipts:** When the Conductor takes command of the audio interface, it writes header banners directly to `cns00` in clean 7-bit ASCII, notifying operators that acoustic synthesis has been claimed by the master lifecycle.
+- **Subprocess Spawning Logs:** As the Conductor orders `10.generate.unit` to run `synthesize.py`, it pipes process status (process ID, target engine name, character style profile) into the active terminal feed.
+- **Real-Time Polling Animation:** During the 5-to-10 second synthesis window, the non-blocking polling ticks emit concise heartbeat receipts into `cns00` (e.g., displaying file check attempts, current byte counts, and stabilization progress).
+- **Audit & Certification Banners:** Once the file is promoted, the Conductor streams the results of `01.loudness.unit` and `02.peaks.unit` directly to the screen, showing measured LUFS, True-Peak values, and the calculated 24 fps integer frame budget before continuing to the next scene beat.
+
+#### 3. Programmatic Navigation of 98.menu.unit and 85.choice.unit
+
+In the Candor Blessed architecture, the visual menu displayed on the left quadrant (columns 0 through 4) is governed by `98.menu.unit` and rendered via `85.choice.unit`:
+
+- **Choice Interception:** The menu unit registers vertical choice lists with defined action callbacks and resolver promises (`slv` / `rootSlv`). The Conductor can simulate or programmatically resolve these promises, advancing menu items without requiring physical keyboard interaction.
+- **Synchronized State Highlighting:** When an automated generation run begins, the Conductor updates the choice array to reflect active execution states (e.g., dynamically altering the menu labels to show active rendering badges), ensuring that any operator observing the terminal sees the menu reflect current background progress.
+- **Status HUD & Border Theming:** Via the terminal control unit (`80.terminal.unit`), the Conductor can trigger visual theme shifts—changing screen borders or updating the status banner to display the active series slug, canon Merkle root, and acoustic processing state—alerting the operator that the flight deck is locked in synthesis mode.
+- **Clean Menu Release:** Once all dialogue lines have been synthesized, probed with `ffprobe`, and quantized into integer frames, the Conductor resolves the menu promise, cleanly returning the Blessed cockpit back to its root idle state without memory leaks, hung timers, or unhandled curses exceptions.
+
+### You
+
+so [audio-microservice] has no direct connection to [[goblin-viewport-template] and when this system is full operation [series-sower-conductor] acts as a bridge between these repos
+
+### Gemini
+
+That is correct. In this architecture, **`audio-microservice`** (or `microservice-audio`) and **`goblin-viewport-template`** have **zero direct communication**.
+
+When the generative pipeline is in full operation, **`series-sower-conductor`** (also designated `worker-sower-conductor`) functions as the central operational bridge between them on Rig 1.
+
+### 1. The Strict Negative Invariant: Why They Cannot Talk Directly
+
+The studio enforces a strict boundary between the acoustic synthesis spoken domain and downstream visual rendering:
+
+- **Different Dependencies & Runtimes:** `audio-microservice` requires character reference takes, dialect phonetic lexicons, and speech synthesis engine wrappers. `goblin-viewport-template` requires visual sprite manifests, animation rigs, and Remotion TSX templates. Connecting them directly would cross-contaminate their dependency graphs and violate repository boundaries.
+- **Continuous Sound vs. Discrete Integer Video:** `audio-microservice` outputs continuous physical waveforms measured in milliseconds. `goblin-viewport-template` does not know how to measure raw audio buffers at runtime; it only operates on discrete integer frame numbers (e.g., `<Sequence durationInFrames="{75}" from="{0}">`).
+- **The "Zero-Network Render" Boundary:** `goblin-viewport-template` is an offline compiler. When its generated episode workspaces render, they must read static, committed local assets. The rendering engine is strictly prohibited from dispatching live HTTP requests or IPC calls to audio engines mid-render.
+
+### 2. How `series-sower-conductor` Acts as the Active Bridge
+
+`series-sower-conductor` (operating on Rig 1 CPU/RAM) coordinates the two repositories across the sequential execution pipeline:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        UPSTREAM NARRATIVE CORE                         │
+│   worker-sower-engine (Emits validated scene dialogue_ast.json)        │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│               THE BRIDGE: series-sower-conductor (Rig 1)               │
+│                                                                        │
+│  Step A: Calls audio-microservice via HTTP or CLI Subprocess           │
+│          └── [audio-microservice] synthesizes 48 kHz uncompressed WAV  │
+│                                                                        │
+│  Step B: Temporal Frame Quantization & Audio Clock Assembly            │
+│          ├── Runs ffprobe child process on the returned .wav stem       │
+│          ├── target_frames = ⌈(duration_ms / 1000) * 24⌉               │
+│          ├── Calculates -14 dB sidechain ducking curve for score & bed │
+│          └── Assembles exposure_sheet.json & timing manifest           │
+│                                                                        │
+│  Step C: Invokes the Viewport Metaprogram                              │
+│          └── tsx goblin-viewport-template/generator/...                │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ (Payload: dialogue AST, ffprobe
+                                    │  frames, audio stem paths)
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│               THE STAGING COMPILER: goblin-viewport-template           │
+│                                                                        │
+│  1. Scaffolds dedicated workspace inside goblin-episodes/epXXX/        │
+│  2. Harvests & vendors visual assets + stages the .wav stems           │
+│  3. Source-Bakes Episode_XXX.tsx:                                      │
+│     Inlines the conductor's calculated integer frame budgets           │
+│     and audio file paths as static JSX literals                        │
+│  4. Seals provenance into render_manifest.json                         │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                  HEADLESS RASTERIZATION & DELIVERY                     │
+│  series-sower-conductor executes headless Remotion render on epXXX/    │
+│  Output: Final broadcast MP4 committed permanently to the archives     │
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+#### Operational Bridge Steps:
+
+1. **Upstream Ingestion:** The Conductor ingests the dialogue AST and character condition tags emitted by the narrative engine.
+2. **Acoustic Invocation:** The Conductor issues the synthesis command to `audio-microservice`, passing character IDs, emotion enums, and phonetic text.
+3. **Temporal Quantization:** When `audio-microservice` outputs the finalized `.wav` stem, the Conductor spawns `ffprobe` to measure the continuous duration in milliseconds and converts it into discrete 24 fps integer frames:
+  $$
+  \text{target\_frames} = \left\lceil \left(\frac{\text{duration\_ms}}{1000}\right) \times 24 \right\rceil
+  $$
+4. **Exposure Sheet Assembly:** The Conductor compiles the master timing manifest (`exposure_sheet.json`), mapping absolute start frames, punctual Foley triggers, and ambient audio sidechain ducking curves (-14 dB attenuation during dialogue).
+5. **Compiler Handoff:** The Conductor invokes the generator script inside `goblin-viewport-template` (`generator/generate-episode-repo.ts`), handing off the validated AST, the quantized frame allocations, and the staged audio paths.
+6. **Execution of the Stamped Artifact:** `goblin-viewport-template` bakes these integer numbers directly into a standalone, static TypeScript file (`Episode_XXX.tsx`) inside `goblin-episodes/`. The Conductor then spawns the headless Remotion renderer (`--gl=swangle`) against that stamped directory to output the final broadcast MP4 deliverable.
+
+### You
+
+{{FOCUS : [microservice-audio] }}
+
+@project-categories-00
+
+### Gemini
+
+In software project management, Epics define large-scale architectural initiatives, Features represent distinct functional capabilities delivered to the system, and Tasks are the atomic, non-overlapping engineering work items required to build them.
+
+Following strict project categorization rules, every item related to [microservice-audio] is decomposed below into single-responsibility Epics, Features, and Tasks with zero informational redundancy, explicit Git repository mappings, and zero use of the word "AND" in any title.
+
+### Git Repository Architecture Mapping
+
+| Git Repository | Role in the [microservice-audio] Architecture |
+| --- | --- |
+| **camp-candor/microservice-audio** | Core repository housing the Candor state machine units, Blessed curses terminal interface, Hono edge gateway, subprocess execution harnesses, and acoustic verification gauntlets. |
+| **worker-sower-conductor** | Rig 1 orchestration master triggering memory eviction calls, validating verbatim dialogue contracts, translating somatic conditions into DSP vectors, and driving terminal choice actions. |
+| **camp-candor/goblin-assets-audio** | Vault storing character reference voice manifests, pinned historical audio takes, dialect G2P lexicons, and precomputed speaker embedding tensors. |
+| **astro-kahn-it-com/001.goblin-lore** | Canonical relational ledger storing entity somatic damage states, physical trauma masks, and biological condition tables governing voice modulation. |
+| **camp-candor/goblin-viewport-template** | Downstream optical compiler receiving quantized 24 fps frame allocations derived from probed audio durations. |
+
+### [Epic 1] Ingress Schema Contract Validation, Hardware Resource Fencing
+
+- Target Git Repositories: camp-candor/microservice-audio, worker-sower-conductor
+
+#### [Feature 1.1] Dialogue AST Ingress Interface
+
+- Target Repository: camp-candor/microservice-audio
+- **[Task 1.1.1] Ingress Payload Zod Schema Implementation:** Define strict Zod validation parsing `character`, `text`, `emotion`, `tonePacing`, and nested `dsp_modifiers` without permitting excess keys.
+- **[Task 1.1.2] State Snapshot Verification Check:** Author validation logic confirming `state_snapshot_hash` matches active canonical state prior to speech execution.
+- **[Task 1.1.3] Dialogue Text Verbatim Match Verification:** Construct compile-time assertion comparing dispatched speech strings directly against screenplay AST strings to halt execution on dropped characters.
+
+#### [Feature 1.2] Rig 1 Silicon Memory Boundary Enforcement
+
+- Target Repository: camp-candor/microservice-audio
+- **[Task 1.2.1] GPU VRAM Zero-Allocation Isolation Variable:** Set `CUDA_VISIBLE_DEVICES=""` within execution runtime environments to restrict speech processes to multi-core CPU threads.
+- **[Task 1.2.2] System Memory Ceiling Limiter:** Implement resident memory ceiling clamps enforcing an 8.0 GB RAM usage budget.
+- **[Task 1.2.3] Turn-Based Model Eviction Dispatcher:** Construct invocation handler triggering external `/free` endpoints to release preliminary language model checkpoints before speech synthesis begins.
+
+### [Epic 2] Somatic Biological Matrix Translation, DSP Modulation
+
+- Target Git Repositories: camp-candor/microservice-audio, worker-sower-conductor, astro-kahn-it-com/001.goblin-lore
+
+#### [Feature 2.1] Somatic State Vector Ingestion
+
+- Target Repository: astro-kahn-it-com/001.goblin-lore
+- **[Task 2.1.1] Biological Condition Ledger Schema Definition:** Author relational tables tracking integer basis-point somatic meters, pulmonary trauma flags, and mobility classifications.
+- **[Task 2.1.2] Physical Phonation Feasibility Gate Logic:** Implement validation checking verbal directives against mute condition flags to intercept impossible speech delivery at compile time.
+
+#### [Feature 2.2] Algebraic Acoustic Parameter Calculation
+
+- Target Repository: worker-sower-conductor
+- **[Task 2.2.1] Pulmonary Trauma Breathiness Scaler:** Author mathematical scaling translating respiratory damage meters into `breathinessPauseMultiplier` values clamped between 1.0 and 3.5.
+- **[Task 2.2.2] Laryngeal Tension Pitch Shift Calculator:** Implement algebraic formula shifting fundamental frequency semitones dynamically based on acute threat parameters.
+- **[Task 2.2.3] Subharmonic Vocal Fry Density Formulator:** Build calculation routine computing `vocalFryDensity` ratios from somatic fatigue records.
+
+#### [Feature 2.3] Prosodic Dialect Filtering
+
+- Target Repository: camp-candor/microservice-audio
+- **[Task 2.3.1] Grapheme-To-Phoneme Lexicon Overrides Parser:** Author dictionary parser resolving dialect contractions from `lexicon.json` before vocoder synthesis.
+- **[Task 2.3.2] Prohibited Cadence Interception Filter:** Implement rejection checks scanning phoneme delivery against banned delivery profiles.
+
+### [Epic 3] Native Node.js Ephemeral Subprocess Execution Harness
+
+- Target Git Repositories: camp-candor/microservice-audio
+
+#### [Feature 3.1] Python Child Process Invoker
+
+- Target Repository: camp-candor/microservice-audio
+- **[Task 3.1.1] Subprocess Argument Vector Serializer:** Build serializer mapping validated dialogue payloads into CLI argument arrays for `synthesize.py` execution.
+- **[Task 3.1.2] Child Process Spawn Execution Handler:** Implement native Node.js `child_process.execFile` caller invoking local Python runtimes without persistent web server daemons.
+- **[Task 3.1.3] Subprocess Non-Zero Exit Code Trap:** Author error-handling wrapper trapping Python tracebacks, module import crashes, and process panics.
+
+#### [Feature 3.2] Multi-Engine Repository Adapters
+
+- Target Repository: camp-candor/microservice-audio
+- **[Task 3.2.1] StyleTTS-2 Repository Invocation Wrapper:** Construct wrapper executing `000.StyleTTS-2` neural synthesis scripts with precomputed style latent tensors.
+- **[Task 3.2.2] Parler-Talk Natural Language Prompt Compiler:** Author adapter translating emotion tags into descriptive prose conditioning prompts for `000.parler-talk` cross-attention decoders.
+- **[Task 3.2.3] Piper ONNX High-Speed Execution Adapter:** Build execution adapter running CPU-based ONNX model inferences for background chatter lines.
+
+#### [Feature 3.3] Non-Blocking File Stabilization Watcher
+
+- Target Repository: camp-candor/microservice-audio
+- **[Task 3.3.1] Ephemeral File Polling Interval Loop:** Construct asynchronous polling timer checking disk existence of `.tmp` audio staging paths every 200 milliseconds.
+- **[Task 3.3.2] Inode Byte-Size Quiescence Checker:** Author comparator asserting audio buffer byte counts remain unchanged across consecutive poll checks.
+- **[Task 3.3.3] Synthesis Deadlock Circuit Breaker:** Implement timeout watcher terminating child processes exceeding a 30-second execution threshold.
+
+### [Epic 4] Signal Integrity Certification, Atomic Staging Pipeline
+
+- Target Git Repositories: camp-candor/microservice-audio
+
+#### [Feature 4.1] EBU R128 Loudness Conformance
+
+- Target Repository: camp-candor/microservice-audio
+- **[Task 4.1.1] Integrated LUFS Normalization Filter:** Implement headless audio normalization enforcing a -16.0 LUFS web target or -24.0 LUFS broadcast target.
+- **[Task 4.1.2] Brickwall True-Peak Limiter Guard:** Author digital peak limiter clamping audio samples to a -1.0 dBTP ceiling.
+- **[Task 4.1.3] Background Noise Floor Probe:** Build validation probe asserting unvoiced intervals maintain background noise below -60.0 dBFS.
+
+#### [Feature 4.2] Acoustic Hygiene Frequency Sculpting
+
+- Target Repository: camp-candor/microservice-audio
+- **[Task 4.2.1] Sub-Bass Rumble High-Pass Filter:** Implement 4th-order Butterworth high-pass filter stripping frequencies below 90.0 Hz.
+- **[Task 4.2.2] Dynamic Optical Bandpass De-Esser:** Build dynamic bandpass attenuator reducing harsh sibilance between 6,000 Hz and 8,000 Hz.
+
+#### [Feature 4.3] Post-Synthesis Verification Alignment
+
+- Target Repository: camp-candor/microservice-audio
+- **[Task 4.3.1] Automated Transcription Parity Gate:** Implement automated Speech-To-Text verification pass checking synthesized audio against screenplay AST text.
+- **[Task 4.3.2] Zero-Byte Poison Buffer Sentinel:** Author validator rejecting output buffers measuring under 1,024 bytes or failing RIFF WAVE header tests.
+
+#### [Feature 4.4] Atomic Asset Commitment
+
+- Target Repository: camp-candor/microservice-audio
+- **[Task 4.4.1] Kernel-Level Atomic POSIX Rename Trigger:** Execute `fs.renameSync` promoting stabilized `.tmp` files to permanent `.wav` target paths.
+- **[Task 4.4.2] Content-Addressed Cryptographic Hash Generator:** Compute SHA-256 digests over conformed linear PCM WAV files to freeze binary immutability.
+
+### [Epic 5] Candor State Machine Unit Modularization
+
+- Target Git Repositories: camp-candor/microservice-audio
+
+#### [Feature 5.1] Core Domain Lifecycle Units
+
+- Target Repository: camp-candor/microservice-audio
+- **[Task 5.1.1] Microservice Audio Master Unit Implementation:** Author `00.microserviceaudio.unit` handling system initialization and runtime state hydration.
+- **[Task 5.1.2] Subprocess Generation Unit Wiring:** Build `10.generate.unit` managing child process spawning, polling intervals, and staging rename triggers.
+- **[Task 5.1.3] Audio Loudness Verification Unit Wiring:** Implement `01.loudness.unit` auditing integrated loudness against studio distribution profiles.
+- **[Task 5.1.4] True-Peak Clamping Unit Implementation:** Construct `02.peaks.unit` asserting true-peak compliance across raw float32 PCM streams.
+
+#### [Feature 5.2] DSP Acoustic Conditioning Units
+
+- Target Repository: camp-candor/microservice-audio
+- **[Task 5.2.1] Somatic Conditioning Profile Unit Wiring:** Author `14.conditioning.unit` binding character somatic vectors into concrete synthesis profiles.
+- **[Task 5.2.2] Acoustic Signal Parameter Unit Wiring:** Build `12.acoustic.unit` managing formant warping scalars and fundamental frequency adjustments.
+- **[Task 5.2.3] De-Esser Filter Attenuation Unit Wiring:** Implement `16.deesser.unit` reducing high-frequency resonant peaks.
+
+#### [Feature 5.3] Central Event Bus Units
+
+- Target Repository: camp-candor/microservice-audio
+- **[Task 5.3.1] RxJS BehaviorSubject Event Core:** Author `99.core/state.ts` managing reactive action dispatches and state propagation.
+- **[Task 5.3.2] Internal Message Bus Unit Wiring:** Build `99.bus.unit` routing action payloads across decoupled functional units.
+- **[Task 5.3.3] Asset Collection Registry Unit Wiring:** Construct `97.collect.unit` cataloging immutable stem descriptors and cryptographic checksums.
+
+### [Epic 6] Blessed Terminal Cockpit Surface Telemetry
+
+- Target Git Repositories: camp-candor/microservice-audio, worker-sower-conductor
+
+#### [Feature 6.1] Cartesian Grid Dashboard Layout
+
+- Target Repository: camp-candor/microservice-audio
+- **[Task 6.1.1] 12x12 Grid Screen Division Setup:** Construct `81.grid.unit` configuring Cartesian window geometry across terminal screens.
+- **[Task 6.1.2] Console Output Pane Initialization:** Author `83.console.unit` initializing pane `cns00` for real-time ASCII telemetry streaming.
+- **[Task 6.1.3] Navigation Choice Axis Mounting:** Build `85.choice.unit` mounting vertical selection lists on the left screen quadrant.
+
+#### [Feature 6.2] Conductor Remote Interface Manipulation
+
+- Target Repository: worker-sower-conductor
+- **[Task 6.2.1] Global Pivot Action Dispatcher:** Construct dispatcher invoking `global.MICROSERVICEAUDIO.hunt` to inject generation commands programmatically.
+- **[Task 6.2.2] Console Telemetry Log Streamer:** Author logging methods writing synthesis status, process identifiers, and polling ticks directly to `cns00`.
+- **[Task 6.2.3] Programmatic Menu Choice Resolution Handler:** Implement automation resolving `98.menu.unit` selection promises without requiring operator keyboard entry.
+- **[Task 6.2.4] Terminal Theme Border State Modulator:** Build terminal visual controllers shifting border color themes during active audio synthesis runs.
+
+### [Epic 7] Physical Master Clock Quantization, Exposure Sheet Assembly
+
+- Target Git Repositories: worker-sower-conductor, camp-candor/goblin-viewport-template
+
+#### [Feature 7.1] Millisecond Audio Duration Observation
+
+- Target Repository: worker-sower-conductor
+- **[Task 7.1.1] POSIX ffprobe Duration Subprocess Invoker:** Construct asynchronous child process querying container headers to extract millisecond duration values.
+- **[Task 7.1.2] Audio Stream Header Verification Sentry:** Author stream parser verifying 48,000 Hz sample rates and 24-bit linear PCM format attributes.
+
+#### [Feature 7.2] Discrete 24 fps Timeline Quantization
+
+- Target Repository: worker-sower-conductor
+- **[Task 7.2.1] Mathematical Ceiling Frame Calculator:** Implement the ceiling arithmetic formula $\lceil (D_{\text{ms}} / 1000) \times 24 \rceil$ converting continuous sound into discrete integer frame budgets.
+- **[Task 7.2.2] Sub-Frame Zero-Length Clamp Safeguard:** Construct minimum boundary clamp enforcing a one-frame minimum allocation for short interjections.
+- **[Task 7.2.3] Monotonic Frame Offset Accumulator:** Build cumulative millisecond quantizer computing absolute sequence starting frames to eliminate rounding drift.
+
+#### [Feature 7.3] Dynamic Acoustic Ducking Automation
+
+- Target Repository: worker-sower-conductor
+- **[Task 7.3.1] Quadratic Attack Easing Calculator:** Implement six-frame quadratic curve dipping background tracks by -14 dB during dialogue intervals.
+- **[Task 7.3.2] Quadratic Release Recovery Calculator:** Construct twelve-frame quadratic release curve restoring ambient volume back to unity during pauses.
+- **[Task 7.3.3] Inter-Dialogue Gain Anti-Pumping Clamp:** Author evaluation logic clamping attenuation flat during short dialogue pauses under 18 frames.
+
+#### [Feature 7.4] Downstream Exposure Sheet Serialization
+
+- Target Repository: worker-sower-conductor
+- **[Task 7.4.1] Timing Manifest JSON Serializer:** Author writer outputting calculated frame boundaries, stem relative paths, and ducking arrays to `exposure_sheet.json`.
+- **[Task 7.4.2] Viewport Template Generator Child Process Dispatcher:** Construct CLI caller invoking `generate-episode-repo.ts` to stamp out static Remotion compositions inside `goblin-episodes/`.
+
+### You
+
+{{FOCUS : microservice-audio }}
+
+{{REPO : 000.microservice-audio }}
+
+@repo-task-list-01
+
+### Gemini
+
+### Architectural Blueprint: Native Unit Execution in 000.microservice-audio
+
+This blueprint defines the atomic, non-overlapping engineering tasks required to bring **microservice-audio** into full operational capability within repository **000.microservice-audio**. In strict conformance with the repository topology, all functional code resides directly inside the Candor units of `packages/700.microserviceaudio/` (such as `10.generate.unit`, `01.loudness.unit`, `02.peaks.unit`, `06.transcription.unit`) or within `apps/worker`. Zero standalone scripts are introduced; every capability is controllable via the Blessed curses interface (`98.menu.unit` and `apps/995.library`), prioritizing Rig 1 local desktop subprocess execution before extending to the Cloudflare Edge Worker gateway.
+
+### [Phase 1] Local Subprocess Spawner Harness Setup
+
+- Target Scope: Local Rig 1 Process Execution without Network Daemons
+
+#### [Feature 1.1] Python Subprocess Invocation Unit Wiring
+
+- Target Unit: `packages/700.microserviceaudio/10.generate.unit`
+- **[Task 1.1.1] CLI Execution Argument Serializer:** Author action logic in `buz/generate.buzz.ts` transforming incoming `GenerateBit` payloads into argument vectors passing text, character, emotion, pacing, and DSP parameters.
+- **[Task 1.1.2] Ephemeral Child Process Dispatcher:** Implement `child_process.execFile` execution in `buz/generate.buzz.ts` targeting Python synthesis entrypoints with explicit environment variable `CUDA_VISIBLE_DEVICES=""`.
+- **[Task 1.1.3] Subprocess Crash Error Trapper:** Author process monitoring in `10.generate.unit` intercepting non-zero exit codes, capturing Python stderr buffers, and rejecting faulty generation runs.
+
+#### [Feature 1.2] Multi-Engine Model Adapters
+
+- Target Unit: `packages/700.microserviceaudio/10.generate.unit`
+- **[Task 1.2.1] StyleTTS-2 Invocation Strategy Module:** Author execution logic selecting `000.StyleTTS-2` runtime arguments alongside precomputed style latent tensors.
+- **[Task 1.2.2] Parler-Talk Natural Language Prompt Compiler:** Construct parameter parser translating emotional condition tags into descriptive prosodic prompt flags for `000.parler-talk`.
+- **[Task 1.2.3] Piper ONNX High-Speed Execution Branch:** Build lightweight invocation branch running pure CPU ONNX checkpoints for background character dialogue.
+
+### [Phase 2] Non-Blocking Inode Polling File Watcher
+
+- Target Scope: Partial-Write Prevention, Inode Quiescence Detection
+
+#### [Feature 2.1] Temporary File Presence Watcher
+
+- Target Unit: `packages/700.microserviceaudio/10.generate.unit`
+- **[Task 2.1.1] Ephemeral File Polling Loop:** Implement recurring asynchronous timer interval checking disk presence for `.tmp` audio staging paths every 200 milliseconds.
+- **[Task 2.1.2] Execution Timeout Circuit Breaker:** Implement timeout check terminating subprocess execution when target `.tmp` files fail to materialize within 30 seconds.
+
+#### [Feature 2.2] Buffer Stabilization Verification
+
+- Target Unit: `packages/700.microserviceaudio/10.generate.unit`
+- **[Task 2.2.1] Inode Byte-Count Quiescence Comparer:** Author file state comparison in `buz/generate.buzz.ts` verifying that staging file size remains identical across consecutive polling intervals.
+- **[Task 2.2.2] Kernel Level Atomic POSIX Promotion:** Execute `fs.renameSync` in `10.generate.unit` promoting verified `.tmp` staging buffers to permanent `.wav` target paths.
+
+### [Phase 3] Post-Synthesis Conformance Verification Gauntlet
+
+- Target Scope: Signal Certification, Verbatim Transcription Gate
+
+#### [Feature 3.1] EBU R128 Loudness Verification
+
+- Target Unit: `packages/700.microserviceaudio/01.loudness.unit`
+- **[Task 3.1.1] Integrated LUFS Measurement Buzzer:** Author inspection logic in `buz/loudness.buzz.ts` measuring integrated loudness to verify conformance against -16.0 LUFS web delivery standards.
+- **[Task 3.1.2] Loudness Normalization Rejection Gate:** Implement failure dispatcher marking stems invalid when measured loudness deviates beyond $\pm 1.0$ LUFS tolerance limits.
+
+#### [Feature 3.2] True-Peak Clamping Verification
+
+- Target Unit: `packages/700.microserviceaudio/02.peaks.unit`
+- **[Task 3.2.1] Sample Peak Amplitude Scanner:** Author sample scan logic in `buz/peaks.buzz.ts` reading linear PCM buffers to detect inter-sample overshoots.
+- **[Task 3.2.2] Brickwall True-Peak Threshold Enforcement:** Implement verification rule asserting waveform peaks remain strictly below -1.0 dBTP to eliminate DAC clipping.
+
+#### [Feature 3.3] Verbatim Script Alignment Probe
+
+- Target Unit: `packages/700.microserviceaudio/06.transcription.unit`
+- **[Task 3.3.1] Speech Phoneme Transcription Comparer:** Author comparison logic in `buz/transcription.buzz.ts` checking speech recognition output against input screenplay dialogue text.
+- **[Task 3.3.2] Zero-Byte Poison Buffer Sentinel:** Implement file header validation asserting generated files exceed 1024 bytes and contain valid RIFF WAVE markers.
+
+### [Phase 4] Somatic Trait DSP Parameter Resolution
+
+- Target Scope: Biological Trauma Vector Translation
+
+#### [Feature 4.1] Somatic State Vector Ingestion
+
+- Target Unit: `packages/700.microserviceaudio/14.conditioning.unit`
+- **[Task 4.1.1] Character Somatic Vector Ingress Parser:** Author payload parser in `buz/conditioning.buzz.ts` extracting pulmonary trauma meters, laryngeal tension flags, and fatigue indicators.
+- **[Task 4.1.2] Phonation Capability Pre-Flight Gate:** Implement validation in `14.conditioning.unit` checking verbal directives against mute or airway blockage flags to abort invalid speech commands.
+
+#### [Feature 4.2] Acoustic Tract Geometry Warping
+
+- Target Unit: `packages/700.microserviceaudio/12.acoustic.unit`
+- **[Task 4.2.1] Respiratory Trauma Breathiness Multiplier:** Author calculation formula in `buz/acoustic.buzz.ts` scaling respiratory damage meters into breath cadence multipliers.
+- **[Task 4.2.2] Fundamental Frequency Pitch Shift Scaler:** Author mathematical scaling shifting fundamental pitch semitones dynamically based on acute threat parameters.
+- **[Task 4.2.3] Subharmonic Vocal Fry Density Resolver:** Implement calculation logic computing vocal fry ratios from character fatigue records.
+
+### [Phase 5] Terminal Cockpit Control Integration
+
+- Target Scope: Blessed Interface Menus, Choice Axis, Real-Time Telemetry
+
+#### [Feature 5.1] Blessed Menu Action Extension
+
+- Target Unit: `packages/700.microserviceaudio/98.menu.unit`
+- **[Task 5.1.1] Synthesis Execution Menu Entry:** Add interactive menu options in `buz/00.menu.buzz.ts` permitting manual triggering of line synthesis passes.
+- **[Task 5.1.2] Loudness Certification Audit Choice:** Mount menu selection in `98.menu.unit` enabling on-demand EBU R128 loudness verification across stored audio collections.
+- **[Task 5.1.3] Subprocess Engine Mode Toggle Selection:** Author menu toggle in `98.menu.unit` allowing operators to select active execution engines between StyleTTS-2, Parler-Talk, and Piper.
+
+#### [Feature 5.2] Real-Time Console Telemetry Streaming
+
+- Target Unit: `packages/700.microserviceaudio/99.bus.unit`
+- **[Task 5.2.1] Subprocess Heartbeat Console Pipe:** Author event bus handler in `buz/bus.buzz.ts` streaming child process ID, execution state, and exit codes directly to `cns00`.
+- **[Task 5.2.2] Polling Status Console Streamer:** Build telemetry logger in `99.bus.unit` printing live file existence checks, stabilization byte sizes, and rename milestones.
+- **[Task 5.2.3] Conformance Pass Failure Banner Emitter:** Author alert formatting in `99.bus.unit` emitting color-coded pass or failure notices to the Blessed terminal display.
+
+### [Phase 6] Asset Collection Ledger Sealing
+
+- Target Scope: Cryptographic Hashing, Monotonic Manifest Recording
+
+#### [Feature 6.1] Audio Stem Ledger Archiving
+
+- Target Unit: `packages/700.microserviceaudio/97.collect.unit`
+- **[Task 6.1.1] Content-Addressed SHA-256 Digest Calculator:** Implement binary hash calculation in `buz/collect.buzz.ts` computing unique SHA-256 checksums over conformed WAV stems.
+- **[Task 6.1.2] Physical Millisecond Duration Indexer:** Record probed millisecond audio duration alongside storage path references inside the unit collection model.
+- **[Task 6.1.3] Immutable Stem Manifest Serializer:** Author JSON serialization in `97.collect.unit` emitting metadata records for consumption by downstream orchestration masters.
+
+### [Phase 7] Cloudflare Worker Edge Gateway Expansion
+
+- Target Scope: Edge Routing, Durable Object Session Coordination
+
+#### [Feature 7.1] Worker Ingress Routing Interface
+
+- Target Directory: `apps/worker`
+- **[Task 7.1.1] Edge Gateway Hono Route Handler:** Author endpoint handler in `apps/worker/src/index.ts` validating inbound REST requests and proxying requests to local execution environments.
+- **[Task 7.1.2] HMAC Signature Verification Middleware:** Implement security middleware in `apps/worker` verifying cryptographic request signatures prior to job routing.
+
+#### [Feature 7.2] Durable Object State Mutex
+
+- Target Directory: `apps/worker`
+- **[Task 7.2.1] Agent Session Durable Object SQLite Class:** Author state management class in `apps/worker/src/` tracking active audio generation leases via Durable Object SQLite storage.
+- **[Task 7.2.2] Monotonic Lease Token Governor:** Implement lease acquisition and heartbeat tracking in `apps/worker` preventing concurrent synthesis collisions.
+
+### You
+
+is every Epic for [microservice-audio] represented in that listing of Phases for [microservice-audio]
+
+### Gemini
+
+In the architectural breakdown of **000.microservice-audio**, not every Epic is represented in the list of Phases.
+
+### Direct Comparison: Epics vs. Phases
+
+| Epic in [microservice-audio] Architecture | Corresponding Phase in Blueprint | Status |
+| --- | --- | --- |
+| **[Epic 1] Ingress Schema Contract Validation, Hardware Resource Fencing** | **[Phase 1] Local Subprocess Spawner Harness Setup** (absorbs arguments) & **Partially Omitted** | **Deficient / Missing Ingress Schemas** |
+| **[Epic 2] Somatic Biological Matrix Translation, DSP Modulation** | **[Phase 4] Somatic Trait DSP Parameter Resolution** | **Represented** |
+| **[Epic 3] Native Node.js Ephemeral Subprocess Execution Harness** | **[Phase 1] Local Subprocess Spawner Harness Setup** & **[Phase 2] Non-Blocking Inode Polling File Watcher** | **Represented** |
+| **[Epic 4] Signal Integrity Certification, Atomic Staging Pipeline** | **[Phase 2]** (Atomic Rename), **[Phase 3] Post-Synthesis Conformance Verification Gauntlet**, & **[Phase 6] Asset Collection Ledger Sealing** | **Represented** |
+| **[Epic 5] Candor State Machine Unit Modularization** | Distributed across individual units (`10.generate`, `01.loudness`, `02.peaks`, `14.conditioning`, etc.) | **Represented** |
+| **[Epic 6] Blessed Terminal Cockpit Surface Telemetry** | **[Phase 5] Terminal Cockpit Control Integration** | **Represented** |
+| **[Epic 7] Physical Master Clock Quantization, Exposure Sheet Assembly** | *Not in Phases 1–7* | **Intentionally Omitted / Bound to Conductor** |
+| *Cloudflare Edge Expansion* | **[Phase 7] Cloudflare Worker Edge Gateway Expansion** | **Bonus Phase** (Beyond local desktop epics) |
+
+### Detailed Analysis of the Gaps
+
+#### 1. [Epic 7] Physical Master Clock Quantization, Exposure Sheet Assembly (Omitted by Boundary Rule)
+
+- **What is missing:** Epic 7 features—such as child-process `ffprobe` duration observation, discrete 24 fps integer ceiling math ($\lceil (D_{\text{ms}} / 1000) \times 24 \rceil$), and `exposure_sheet.json` ducking generation—are **absent** from the Phases.
+- **Why it is omitted:** In the system topology, `ffprobe` quantization and timeline layout belong to **`worker-sower-conductor`** (specifically in `packages/400.conductor/24.frame.unit/` and `37.lifecycle.unit/`), **not** inside `000.microservice-audio`. Because the prompt specifically targeted the file tree and scope of repo `000.microservice-audio`, the conductor-owned clock quantization tasks were properly pruned from the microservice's local units.
+
+#### 2. [Epic 1] Ingress Schema Contract Validation (Partially Missing)
+
+- **What is missing:** In the repository mapping, `packages/700.microserviceaudio/08.schemas.unit` defines the formal Zod payload contracts (`TTSGenerationRequest`, `state_snapshot_hash` verifications, and strict schema parsing).
+- **The gap:** The phased listing jumped straight into `10.generate.unit` child-process spawning and argument serialization without establishing a dedicated phase or feature for `08.schemas.unit` to validate inbound contracts before synthesis execution begins.
+
+#### 3. [Epic 4] Acoustic Hygiene Frequency Sculpting (Partially Missing)
+
+- **What is missing:** Feature 4.2 of Epic 4 defined the 90 Hz sub-bass rumble high-pass filter and the 6,000–8,000 Hz dynamic de-esser.
+- **The gap:** The provided Phase 3 focused on loudness, true-peak, and transcription parity, but omitted tasks for wiring `packages/700.microserviceaudio/11.filter.unit` (high-pass filter) and `packages/700.microserviceaudio/16.deesser.unit` (sibilance attenuation).
+
+### Recommended Remediation
+
+To make the blueprint an exact 1:1 reflection of all domain responsibilities inside `000.microservice-audio`:
+
+1. **Insert an Ingress Schema Phase** in `08.schemas.unit` to house strict Zod contract parsing, snapshot validation, and verbatim screenplay AST string comparison before process execution.
+2. **Expand the Conformance Gauntlet** to include `11.filter.unit` (sub-bass high-pass filter) and `16.deesser.unit` (optical bandpass attenuation).
+3. **Leave Epic 7 in `series-sower-conductor`**, as master clock quantization and Remotion exposure sheet serialization belong strictly to the conductor host.
+
+### You
+
+can you turn these [Insert an Ingress Schema Phase in 08.schemas.unit to house strict Zod contract parsing, snapshot validation, and verbatim screenplay AST string comparison before process execution.
+
+Expand the Conformance Gauntlet to include 11.filter.unit (sub-bass high-pass filter) and 16.deesser.unit (optical bandpass attenuation).] into Phases
+
+### Gemini
+
+### [Phase 8] Ingress Schema Contract Validation Pipeline
+
+- Target Scope: Structural Ingress Boundaries, Cryptographic State Anchoring, Verbatim Dialogue Parity
+
+#### [Feature 8.1] Closed World Zod Ingress Contract Construction
+
+- Target Unit: `packages/700.microserviceaudio/08.schemas.unit`
+- **[Task 8.1.1] Dialogue AST Ingress Schema Definition:** Construct `val/dialogueAst.val.ts` defining `DialogueLineSchema` and `SceneASTSchema` terminated with `.strict()`, parsing `character`, verbatim 7-bit ASCII `text`, `emotion`, `tonePacing`, and basis-point somatic DSP modifiers ($0\dots 10{,}000\text{ bps}$) while failing closed on extra keys at $T_0 = \$0.00$.
+- **[Task 8.1.2] Cryptographic State Snapshot Anchor Verification:** Author assertion logic in `buz/schemas.buzz.ts` validating that `state_snapshot_hash` strictly satisfies the 64-character lowercase hex pattern `/^[0-9a-f]{64}$/`, aborting synthesis immediately if the upstream narrative ledger has mutated.
+- **[Task 8.1.3] Un-Schemaed Key Closure Sentinel:** Assemble the complete payload contract in `fce/schemas.interface.ts` rejecting hallucinated LLM properties or float scalars, mapping validated records directly into `SchemasBit`.
+
+#### [Feature 8.2] Pre-Flight Verbatim Linguistic Parity Gate
+
+- Target Unit: `packages/700.microserviceaudio/08.schemas.unit`
+- **[Task 8.2.1] Script AST Verbatim Parity Comparator:** Author pre-flight string validation in `buz/schemas.buzz.ts` asserting exact character-for-character equivalence between incoming execution payloads and the locked screenplay AST before invoking any synthesis worker.
+- **[Task 8.2.2] Banned Pronunciation Lexicon Ingress Sweep:** Implement token scanning in `buz/schemas.buzz.ts` matching dialogue tokens against series-scoped prohibited pronunciation tables (e.g., catching out-of-vocabulary neural failure modes) prior to synthesis.
+- **[Task 8.2.3] Somatic Phonation Feasibility Gate:** Author validation logic in `buz/schemas.buzz.ts` verifying that character conditions do not contain `mute` or airway trauma flags when verbal dialogue directives are present, halting impossible physical actions with `VOCAL_DELIVERY_BREACH`.
+
+#### [Feature 8.3] Blessed Schema Menu Validation Binding
+
+- Target Unit: `packages/700.microserviceaudio/98.menu.unit`
+- **[Task 8.3.1] Interactive Ingress Schema Audit Choice Binding:** Register `[SCHEMA: AUDIT INGRESS CONTRACT]` in `buz/00.menu.buzz.ts` to allow terminal operators to manually trigger validation passes over staged `dialogue_ast.json` files.
+- **[Task 8.3.2] Real-Time Contract Telemetry Emitter:** Author event handlers in `buz/00.menu.buzz.ts` piping Zod schema validation receipts, detected discrepancies, and state hash verification confirmations directly to console pane `cns00`.
+
+### [Phase 9] Pre-Conform Spectral Hygiene Conformance Gauntlet
+
+- Target Scope: Infrasonic Rumble High-Pass Attenuation, Optical Dynamic De-Essing
+
+#### [Feature 9.1] Sub-Bass Rumble Infrasonic Attenuation
+
+- Target Unit: `packages/700.microserviceaudio/11.filter.unit`
+- **[Task 9.1.1] High-Pass Butterworth Filter Core Implementation:** Author 4th-order Butterworth filter logic in `buz/filter.buzz.ts` enforcing a 24 dB/octave attenuation curve with a cutoff frequency $f_c$ between $80.0\text{ Hz}$ and $100.0\text{ Hz}$ ($\vert{}H(f)\vert{} = 1 / \sqrt{1 + (f_c/f)^{2N}}, N=4$).
+- **[Task 9.1.2] DC Bias Infrasonic Energy Stripper:** Implement sample-level DC offset removal in `buz/filter.buzz.ts` to strip microphone plosive thumps and chassis vibrations without thinning vocal fundamental frequency $F_0$.
+- **[Task 9.1.3] Mains Hum Notch Rejection Unit:** Build narrow-band IIR notch filters ($Q \ge 30$) inside `buz/filter.buzz.ts` eliminating 50 Hz and 60 Hz electrical mains hum alongside secondary harmonics.
+
+#### [Feature 9.2] Optical Dynamic Sibilance Bandpass Attenuation
+
+- Target Unit: `packages/700.microserviceaudio/16.deesser.unit`
+- **[Task 9.2.1] Optical De-Esser Bandpass Detection Loop:** Author spectral monitoring in `buz/deesser.buzz.ts` scanning the $6{,}000\text{ Hz}$ to $8{,}000\text{ Hz}$ frequency band to detect strident fricative energy spikes.
+- **[Task 9.2.2] Split-Band Dynamic Compressor Logic:** Build fast-acting attenuation in `buz/deesser.buzz.ts` (1 ms attack, 20 ms release) compressing sibilant frequencies exceeding $-18.0\text{ dBFS}$ while preserving vocal presence.
+- **[Task 9.2.3] Ultrasonic Bandwidth Limiter Integration:** Implement steep low-pass filtering at $22.0\text{ kHz}$ in `buz/deesser.buzz.ts` to prevent high-frequency aliasing during downstream vocoder and delivery encoding passes.
+
+#### [Feature 9.3] Blessed Spectral Hygiene Telemetry Integration
+
+- Target Unit: `packages/700.microserviceaudio/98.menu.unit`
+- **[Task 9.3.1] Spectral Hygiene Menu Audit Registration:** Add `[FILTER: RUN PRE-CONFORM SPECTRAL AUDIT]` to the interactive menu choice list in `buz/00.menu.buzz.ts`.
+- **[Task 9.3.2] Frequency Attenuation Telemetry Logging:** Author event log formatters in `buz/00.menu.buzz.ts` printing high-pass corner frequencies, measured DC offsets, and sibilance reduction decibels in real time to switchboard pane `cns00`.
+
+### You
+
+{{FOCUS : [Phase 1] Local Subprocess Spawner Harness Setup }}
+
+@jules-task-00
+
+### Gemini
+
+# TASK SPECIFICATION FOR JULES CODING AGENT
+
+## REPOSITORY: `000.microservice-audio`
+
+## TARGET WORKSPACE: `packages/700.microserviceaudio/10.generate.unit/` & `packages/700.microserviceaudio/val/`
+
+## EPIC: `[EPIC 001: LOCAL SUBPROCESS SPAWNER HARNESS]`
+
+## FEATURE: `[Phase 1] Local Subprocess Spawner Harness Setup`
+
+## ROLE: Autonomous Execution Worker (Jules Sandboxed VM)
+
+### I. SYSTEM LAWS & BOUNDARIES (ATTENTION TOP ANCHOR)
+
+You are an automated, sandboxed execution worker operating within strict monorepo guardrails:
+
+1. **IMMUTABLE RUNNER BOUNDARY (`apps/995.library/`):** You are strictly forbidden from altering or deleting files within `apps/995.library/995.library/**`. Your git diff across `apps/995.library/995.library/**` must evaluate to exactly 0 lines.
+2. **ABSOLUTE BAN ON `packages/700.microserviceaudio/src/`:** Under no circumstances may code reside inside a `src/` directory within `packages/700.microserviceaudio/`. All interfaces, models, buzzers, actions, reducers, and unit files must be placed directly inside root-level numbered unit directories (such as `10.generate.unit/`) and `val/`.
+3. **ZERO-VRAM HARNESS INVARIANT:** All speech synthesis child processes are strictly restricted to multi-threaded CPU and system RAM on Rig 1. Subprocess spawning routines must explicitly pass `CUDA_VISIBLE_DEVICES: ""` within execution environments to guarantee 0 MB of dedicated GPU VRAM consumption.
+4. **NATIVE SUBPROCESS ISOLATION (NO PERSISTENT WEB DAEMONS):** Long-lived FastAPI or uvicorn web servers running on loopback ports are prohibited for this harness. All Python calls must execute as ephemeral, single-shot child processes via Node.js `child_process.execFile`.
+5. **PURE 7-BIT ASCII CONSOLE LOGGING:** Unicode emojis and special characters are forbidden in production code and logs. Output strings streamed to `cns00` must strictly use 7-bit ASCII tokens (`>>`, `[OK]`, `[FAIL]`, `::`, `[SPAWN]`, `[PYTHON]`).
+6. **NODENEXT SPECIFIERS:** All relative import paths across `packages/700.microserviceaudio/` must explicitly end with `.js` extensions.
+
+### II. TARGET FILE MANIFEST
+
+- `packages/700.microserviceaudio/10.generate.unit/fce/generate.bit.ts` (MODIFY)
+- `packages/700.microserviceaudio/10.generate.unit/fce/generate.interface.ts` (MODIFY)
+- `packages/700.microserviceaudio/10.generate.unit/generate.action.ts` (MODIFY)
+- `packages/700.microserviceaudio/10.generate.unit/generate.model.ts` (MODIFY)
+- `packages/700.microserviceaudio/10.generate.unit/generate.buzzer.ts` (MODIFY)
+- `packages/700.microserviceaudio/10.generate.unit/buz/generate.buzz.ts` (REPLACE)
+- `packages/700.microserviceaudio/10.generate.unit/generate.reduce.ts` (MODIFY)
+- `packages/700.microserviceaudio/val/generate.test.ts` (NEW)
+
+### III. FILE IMPLEMENTATION SPECIFICATIONS
+
+#### File 1: `packages/700.microserviceaudio/10.generate.unit/fce/generate.bit.ts`
+
+```typescript
+export interface SomaticDspModifiers {
+  basePitchShiftSemitones?: number;
+  formantWarpingFactor?: number;
+  breathinessPauseMultiplier?: number;
+  vocalFryDensity?: number;
+}
+
+export interface GenerateConfig {
+  engine: 'styletts2' | 'parler' | 'piper';
+  character: string;
+  text: string;
+  emotion?: string;
+  tonePacing?: number;
+  outputPath: string;
+  referenceWav?: string;
+  styleVectorPath?: string;
+  dspModifiers?: SomaticDspModifiers;
+  pythonPath?: string;
+  synthesizeScriptPath?: string;
+}
+
+export interface GenerateResult {
+  status: 'SUCCESS' | 'FAILED';
+  outputPath: string;
+  exitCode: number;
+  executionTimeMs: number;
+  stderr?: string;
+}
+
+export default interface GenerateBit {
+  idx: string;
+  src?: string;
+  val?: number;
+  dat?: GenerateConfig;
+  result?: GenerateResult;
+  slv?: (result: { genBit: GenerateBit }) => void;
+}
+```
+
+#### File 2: `packages/700.microserviceaudio/10.generate.unit/fce/generate.interface.ts`
+
+```typescript
+import type GenerateBit from './generate.bit.js';
+
+export default interface Generate {
+  idx: string;
+  activeProcessCount: number;
+  generateBits: Record<string, GenerateBit>;
+}
+```
+
+#### File 3: `packages/700.microserviceaudio/10.generate.unit/generate.action.ts`
+
+```typescript
+import { Action } from '../99.core/interface/action.interface.js';
+import GenerateBit from './fce/generate.bit.js';
+
+export const INIT_GENERATE = '[Generate action] Init Generate';
+export class InitGenerate implements Action {
+  readonly type = INIT_GENERATE;
+  constructor(public bale: GenerateBit) {}
+}
+
+export const UPDATE_GENERATE = '[Generate action] Update Generate';
+export class UpdateGenerate implements Action {
+  readonly type = UPDATE_GENERATE;
+  constructor(public bale: GenerateBit) {}
+}
+
+export const EXEC_GENERATE = '[Generate action] Exec Generate';
+export class ExecGenerate implements Action {
+  readonly type = EXEC_GENERATE;
+  constructor(public bale: GenerateBit) {}
+}
+
+export type Actions = InitGenerate | UpdateGenerate | ExecGenerate;
+```
+
+#### File 4: `packages/700.microserviceaudio/10.generate.unit/generate.model.ts`
+
+```typescript
+import type Generate from './fce/generate.interface.js';
+import type GenerateBit from './fce/generate.bit.js';
+
+export class GenerateModel implements Generate {
+  idx: string = '10.generate';
+  activeProcessCount: number = 0;
+  generateBits: Record<string, GenerateBit> = {};
+}
+```
+
+#### File 5: `packages/700.microserviceaudio/10.generate.unit/generate.buzzer.ts`
+
+```typescript
+export { initGenerate, updateGenerate, execGenerate } from './buz/generate.buzz.js';
+```
+
+#### File 6: `packages/700.microserviceaudio/10.generate.unit/buz/generate.buzz.ts`
+
+```typescript
+import { execFile } from 'node:child_process';
+import path from 'node:path';
+import { GenerateModel } from '../generate.model.js';
+import GenerateBit, { GenerateConfig, GenerateResult } from '../fce/generate.bit.js';
+import State from '../../99.core/state.js';
+
+const UPDATE_CONSOLE = '[Console action] Update Console';
+
+const logConsole = async (src: string): Promise<void> => {
+  if ((globalThis as any).LIBRARY?.hunt) {
+    await (globalThis as any).LIBRARY.hunt(UPDATE_CONSOLE, {
+      idx: 'cns00',
+      src,
+    });
+  }
+};
+
+export const initGenerate = (
+  cpy: GenerateModel,
+  bal: GenerateBit,
+  ste: State,
+): GenerateModel => {
+  cpy.activeProcessCount = 0;
+  cpy.generateBits = {};
+  if (bal.slv) {
+    bal.slv({ genBit: { idx: 'init-generate', val: 1 } });
+  }
+  return cpy;
+};
+
+export const updateGenerate = (
+  cpy: GenerateModel,
+  bal: GenerateBit,
+  ste: State,
+): GenerateModel => {
+  if (bal.idx) {
+    cpy.generateBits[bal.idx] = bal;
+  }
+  if (bal.slv) {
+    bal.slv({ genBit: bal });
+  }
+  return cpy;
+};
+
+export const buildCliArgs = (cfg: GenerateConfig): string[] => {
+  const args: string[] = [
+    '--engine', cfg.engine,
+    '--text', cfg.text,
+    '--character', cfg.character,
+    '--output', cfg.outputPath,
+  ];
+
+  if (cfg.emotion) {
+    args.push('--emotion', cfg.emotion);
+  }
+  if (cfg.tonePacing !== undefined) {
+    args.push('--pacing', cfg.tonePacing.toString());
+  }
+
+  // Engine adapters
+  if (cfg.engine === 'styletts2' && cfg.styleVectorPath) {
+    args.push('--style-vector', cfg.styleVectorPath);
+  }
+  if (cfg.engine === 'parler') {
+    const descriptionPrompt = `Voice of ${cfg.character}. Emotion: ${cfg.emotion || 'neutral'}. High quality audio, dry room acoustics.`;
+    args.push('--description-prompt', descriptionPrompt);
+  }
+  if (cfg.referenceWav) {
+    args.push('--reference-wav', cfg.referenceWav);
+  }
+
+  // Somatic DSP argument serialization
+  if (cfg.dspModifiers) {
+    if (cfg.dspModifiers.basePitchShiftSemitones !== undefined) {
+      args.push('--pitch-shift', cfg.dspModifiers.basePitchShiftSemitones.toString());
+    }
+    if (cfg.dspModifiers.formantWarpingFactor !== undefined) {
+      args.push('--formant-warp', cfg.dspModifiers.formantWarpingFactor.toString());
+    }
+    if (cfg.dspModifiers.breathinessPauseMultiplier !== undefined) {
+      args.push('--breathiness', cfg.dspModifiers.breathinessPauseMultiplier.toString());
+    }
+    if (cfg.dspModifiers.vocalFryDensity !== undefined) {
+      args.push('--vocal-fry', cfg.dspModifiers.vocalFryDensity.toString());
+    }
+  }
+
+  return args;
+};
+
+export const execGenerate = async (
+  cpy: GenerateModel,
+  bal: GenerateBit,
+  ste: State,
+): Promise<GenerateModel> => {
+  const cfg = bal.dat;
+  if (!cfg) {
+    await logConsole(':: [FAIL] Missing GenerateConfig payload in execGenerate');
+    if (bal.slv) {
+      bal.slv({
+        genBit: {
+          idx: bal.idx,
+          result: {
+            status: 'FAILED',
+            outputPath: '',
+            exitCode: 1,
+            executionTimeMs: 0,
+            stderr: 'MISSING_GENERATE_CONFIG',
+          },
+        },
+      });
+    }
+    return cpy;
+  }
+
+  const pythonExecutable = cfg.pythonPath || process.env.PYTHON_BIN || 'python';
+  const scriptPath = cfg.synthesizeScriptPath || path.resolve(process.cwd(), 'scripts/synthesize.py');
+  const cliArgs = [scriptPath, ...buildCliArgs(cfg)];
+
+  await logConsole(`>> [SPAWN] Dispatching Python Subprocess for character [${cfg.character}]`);
+  await logConsole(`:: [ENGINE] Engine selected: ${cfg.engine}`);
+
+  cpy.activeProcessCount += 1;
+  const t0 = Date.now();
+
+  return new Promise<GenerateModel>((resolve) => {
+    // 0 MB VRAM Invariant: Restrict execution to CPU threads
+    const spawnEnv = {
+      ...process.env,
+      CUDA_VISIBLE_DEVICES: '',
+      OMP_NUM_THREADS: '4',
+      MKL_NUM_THREADS: '4',
+    };
+
+    execFile(
+      pythonExecutable,
+      cliArgs,
+      { env: spawnEnv, timeout: 30000 },
+      async (error, stdout, stderr) => {
+        cpy.activeProcessCount = Math.max(0, cpy.activeProcessCount - 1);
+        const t1 = Date.now();
+        const durationMs = t1 - t0;
+
+        if (error) {
+          const exitCode = typeof error.code === 'number' ? error.code : 1;
+          const cleanErr = (stderr || error.message || 'UNKNOWN_ERROR').trim().slice(0, 300);
+          await logConsole(`:: [FAIL] Subprocess crashed with code ${exitCode} after ${durationMs}ms`);
+          await logConsole(`:: [STDERR] ${cleanErr}`);
+
+          const result: GenerateResult = {
+            status: 'FAILED',
+            outputPath: cfg.outputPath,
+            exitCode,
+            executionTimeMs: durationMs,
+            stderr: cleanErr,
+          };
+
+          bal.result = result;
+          if (bal.slv) bal.slv({ genBit: bal });
+          resolve(cpy);
+          return;
+        }
+
+        await logConsole(`>> [OK] Subprocess completed in ${durationMs}ms with Exit Code 0`);
+        const result: GenerateResult = {
+          status: 'SUCCESS',
+          outputPath: cfg.outputPath,
+          exitCode: 0,
+          executionTimeMs: durationMs,
+        };
+
+        bal.result = result;
+        if (bal.slv) bal.slv({ genBit: bal });
+        resolve(cpy);
+      },
+    );
+  });
+};
+```
+
+#### File 7: `packages/700.microserviceaudio/10.generate.unit/generate.reduce.ts`
+
+```typescript
+import clone from 'clone-deep';
+import * as Act from './generate.action.js';
+import { GenerateModel } from './generate.model.js';
+import * as Buzz from './generate.buzzer.js';
+import State from '../99.core/state.js';
+
+export function reducer(
+  model: GenerateModel = new GenerateModel(),
+  act: Act.Actions,
+  state?: State,
+) {
+  switch (act.type) {
+    case Act.INIT_GENERATE:
+      return Buzz.initGenerate(clone(model), act.bale, state!);
+    case Act.UPDATE_GENERATE:
+      return Buzz.updateGenerate(clone(model), act.bale, state!);
+    case Act.EXEC_GENERATE:
+      return Buzz.execGenerate(clone(model), act.bale, state!);
+    default:
+      return model;
+  }
+}
+```
+
+#### File 8: `packages/700.microserviceaudio/val/generate.test.ts`
+
+```typescript
+import { describe, it, expect, vi } from 'vitest';
+import { buildCliArgs } from '../10.generate.unit/buz/generate.buzz.js';
+import { GenerateConfig } from '../10.generate.unit/fce/generate.bit.js';
+
+describe('10.generate.unit: CLI Argument Serializer', () => {
+  it('serializes StyleTTS-2 configuration with somatic DSP parameters', () => {
+    const config: GenerateConfig = {
+      engine: 'styletts2',
+      character: 'char_wart',
+      text: 'Stand your ground.',
+      emotion: 'tense',
+      tonePacing: 1.2,
+      outputPath: 'scratch/audio/ep01_sh01.wav.tmp',
+      styleVectorPath: 'assets/voices/wart_style.pt',
+      dspModifiers: {
+        basePitchShiftSemitones: -2.5,
+        formantWarpingFactor: 1.15,
+        breathinessPauseMultiplier: 2.0,
+        vocalFryDensity: 0.8,
+      },
+    };
+
+    const args = buildCliArgs(config);
+
+    expect(args).toContain('--engine');
+    expect(args).toContain('styletts2');
+    expect(args).toContain('--character');
+    expect(args).toContain('char_wart');
+    expect(args).toContain('--style-vector');
+    expect(args).toContain('assets/voices/wart_style.pt');
+    expect(args).toContain('--pitch-shift');
+    expect(args).toContain('-2.5');
+    expect(args).toContain('--formant-warp');
+    expect(args).toContain('1.15');
+    expect(args).toContain('--breathiness');
+    expect(args).toContain('2');
+    expect(args).toContain('--vocal-fry');
+    expect(args).toContain('0.8');
+  });
+
+  it('compiles Parler natural language description prompt on demand', () => {
+    const config: GenerateConfig = {
+      engine: 'parler',
+      character: 'char_octavius',
+      text: 'Lower the portcullis now!',
+      emotion: 'enraged',
+      outputPath: 'scratch/audio/ep01_sh02.wav.tmp',
+    };
+
+    const args = buildCliArgs(config);
+
+    expect(args).toContain('--engine');
+    expect(args).toContain('parler');
+    expect(args).toContain('--description-prompt');
+    const descIdx = args.indexOf('--description-prompt');
+    expect(args[descIdx + 1]).toContain('Voice of char_octavius');
+    expect(args[descIdx + 1]).toContain('Emotion: enraged');
+  });
+});
+```
+
+### IV. EXECUTION GAUNTLET & VERIFICATION SEQUENCE
+
+Execute the following verification sequence in your shell to certify compliance:
+
+```bash
+# 1. Typecheck the package
+npm run check:types
+
+# 2. Run unit tests
+npx vitest run packages/700.microserviceaudio/val/generate.test.ts
+
+# 3. Assert zero modification boundary on the immutable curses library
+git status -s apps/995.library/995.library/
+# (Must output zero lines)
+
+# 4. Enforce pure 7-bit ASCII
+git grep -P "[\x{80}-\x{FF}]" packages/700.microserviceaudio/10.generate.unit/
+# (Must exit with code 1; zero non-ASCII bytes found)
+```
+
+### COMMAND TO JULES CODING AGENT:
+
+Upon successful completion and verification of the test suite and execution checks, update the metadata below: Set `- **Status:**` to `[🟢 Done]`. If any test, typecheck, or boundary check fails, set `- **Status:**` to `[🟡 In Progress]`.
+
+### **Attributes:**
+
+- **Status:** [⚪ Backlog ]
+- **Priority:** [🔴 High]
+- **Time Estimate:** [1 Hour]
+- **Tags:** [infrastructure, speech-synthesis, nodejs-subprocess, rig1-orchestrator]
+- **Epic:** [EPIC 001: LOCAL SUBPROCESS SPAWNER HARNESS]
+- **Value:** [Deployment Readiness]
+- **Sprint Points:** [2]
+- **Component:** [Audio Subprocess Engine / packages/700.microserviceaudio/10.generate.unit]
+- **Owner:** [Autonomous Agent Jules]
+- **Target Release:** [Sprint 1 / Day 001]
+- **Risk Level:** [Medium]
+- **Reporter:** [Architecture Orchestrator]
+
+### You
+
+{{FOCUS : [Phase 1] Local Subprocess Spawner Harness Setup }}
+
+@jules-complete-check
+
+### Gemini
+
+### **Validation:**
+
+- **Progress:** [⚪ Waiting for Action ]
+
+### **PRE-FLIGHT COMPLETION AUDIT & EXECUTION CONTROLLER FOR JULES**
+
+Before executing any file modifications or running build commands, Jules must inspect the target codebase within `packages/700.microserviceaudio/` to verify whether work on **[Phase 1] Local Subprocess Spawner Harness Setup** has already been performed.
+
+#### **Completion Verification Checklist (11 Verification Vectors):**
+
+1. **Interface Contract (`10.generate.unit/fce/generate.bit.ts`):** File exists and exports `SomaticDspModifiers`, `GenerateConfig` (including `engine: 'styletts2' | 'parler' | 'piper'`, `character`, `text`, `outputPath`, `dspModifiers`), `GenerateResult`, and `GenerateBit` with a typed `slv` resolver.
+2. **Unit Model Interface (`10.generate.unit/fce/generate.interface.ts`):** File exists and exports `Generate` declaring `idx: string`, `activeProcessCount: number`, and `generateBits: Record<string, GenerateBit>`.
+3. **Action Definitions (`10.generate.unit/generate.action.ts`):** File defines `INIT_GENERATE`, `UPDATE_GENERATE`, and `EXEC_GENERATE` alongside their corresponding Action classes (`InitGenerate`, `UpdateGenerate`, `ExecGenerate`).
+4. **Model Implementation (`10.generate.unit/generate.model.ts`):** File implements `GenerateModel` initializing `idx = '10.generate'`, `activeProcessCount = 0`, and `generateBits = {}`.
+5. **Buzzer Barrel (`10.generate.unit/generate.buzzer.ts`):** File exports `initGenerate`, `updateGenerate`, and `execGenerate` directly from `./buz/generate.buzz.js`.
+6. **Reducer State Flow (`10.generate.unit/generate.reduce.ts`):** Reducer handles `Act.INIT_GENERATE`, `Act.UPDATE_GENERATE`, and `Act.EXEC_GENERATE`, passing cloned models to the respective buzzers with `clone-deep`.
+7. **CLI Argument Serializer (`10.generate.unit/buz/generate.buzz.ts`):** `buildCliArgs(cfg: GenerateConfig)` is implemented and exported, correctly assembling `--engine`, `--text`, `--character`, `--output`, `--style-vector` (for StyleTTS-2), `--description-prompt` (for Parler), and somatic DSP flags (`--pitch-shift`, `--formant-warp`, `--breathiness`, `--vocal-fry`).
+8. **Subprocess Spawner & 0 MB VRAM Invariant (`10.generate.unit/buz/generate.buzz.ts`):** `execGenerate` invokes Node.js `child_process.execFile` with a 30,000 ms timeout and an explicit environment override `CUDA_VISIBLE_DEVICES: ""` to guarantee CPU-only execution.
+9. **Console Telemetry Integration (`10.generate.unit/buz/generate.buzz.ts`):** Operational events stream pure 7-bit ASCII receipts (`>> [SPAWN]`, `:: [ENGINE]`, `>> [OK]`, `:: [FAIL]`) directly to Blessed console pane `cns00` via `globalThis.LIBRARY.hunt('[Console action] Update Console', { idx: 'cns00', src })`.
+10. **Unit Test Suite (`packages/700.microserviceaudio/val/generate.test.ts`):** Test file exists and contains passing tests for StyleTTS-2 somatic argument serialization and Parler natural language prompt compilation.
+11. **System Invariant Compliance:** Zero files within `apps/995.library/995.library/**` are modified (0 diff lines), no code is located inside a `packages/700.microserviceaudio/src/` folder, and all relative imports end with explicit `.js` extensions.
+
+#### **AUTOMATED DECISION GATE FOR JULES:**
+
+- **IF $\ge 67\%$ OF THE CHECKS (8 OR MORE OUT OF 11) ARE ALREADY PRESENT AND VALID:**
+  1. Jules must **HALT IMMEDIATELY**.
+  2. Do **NOT** induce or execute any further code generation, file updates, or test commands.
+  3. Update `[- **Progress:**]` at the top of this specification file with the current UTC timestamp and halt justification:
+    ```markdown
+    - **Progress:** [🟢 Complete - YYYY-MM-DDTHH:mm:ssZ - Execution Halted: >= 67% of Phase 1 spawner harness implementation already verified in packages/700.microserviceaudio/10.generate.unit/]
+    ```
+  4. Save the file and terminate the session.
+- **IF $< 67\%$ OF THE CHECKS (7 OR FEWER OUT OF 11) ARE PRESENT:**
+  1. Jules must proceed to implement all target files as specified in the Phase 1 blueprint.
+  2. Execute the verification gauntlet (`npm run check:types`, `npx vitest run packages/700.microserviceaudio/val/generate.test.ts`, and boundary checks).
+  3. Once all requirements are fulfilled and verified, update `[- **Progress:**]` at the top of this specification file with the completion timestamp:
+    ```markdown
+    - **Progress:** [🟢 Complete - YYYY-MM-DDTHH:mm:ssZ]
+    ```
+  4. Save the file and conclude the session.
+
+> **CRITICAL PARTNER FILE SENTRY RULE:** If there is a partner test file located next to this file in the directory bearing the suffix `[*.phase-*.ag-test.md]`, you are **NEVER TO RUN OR EXECUTE THIS TEST FILE**. A separate, dedicated LLM auditor is responsible for validating and executing that test harness.
+
+### **FUNCTIONAL MANDATE**
+
+#### **User Story**
+
+It is two in the morning in the studio. For months, the local pipeline has been plagued by silent crashes: background Python daemons dying mid-render, loopback port 8000 colliding with stray zombie processes, and CUDA allocators abruptly dropping context because an audio model grabbed VRAM right when the diffusion foundry spun up a 24-frame character plate. The technical director opens the terminal cockpit. Instead of nursing a fragile web server, they fire an episode compile directly from the conductor. Down in `packages/700.microserviceaudio/10.generate.unit`, Node.js takes the wheel. It does not ask permission over a socket; it silently spawns an ephemeral Python child process pinned strictly to Rig 1's CPU cores with `CUDA_VISIBLE_DEVICES` clamped to nothingness. On the left pane of the Blessed display, the choice axis stays crisp; on the right pane, `cns00` ticks with steady 7-bit ASCII receipts as each line of dialogue is synthesized, serialized, and staged. The GPU sits completely untouched at 0 MB allocated VRAM, reserved entirely for the visual diffusion foundry. When the voice cut completes, the child process cleanly vaporizes, leaving behind an immutable, stabilized audio file and a verified millisecond timing receipt.
+
+#### **Strategic Goal**
+
+Supports the primary architecture milestone of **100% Deterministic, Zero-VRAM Rig 1 Acoustic Master Clock Generation at $T_0 = \$0.00$**. This ensures speech synthesis executes purely on host CPU threads and system RAM without persistent daemon latency, port contention, or GPU memory thrashing, enabling discrete 24 fps integer timeline quantization before video diffusion models are ever allocated.
+
+#### **Context & Value**
+
+- **The Strategic Value:** Eliminates the operational fragility of persistent local web servers (`server.py` on port 8000) within the developer environment. By encapsulating external Python neural speech engines inside ephemeral Node.js child processes, the studio prevents memory leakage, port binding collisions, and cross-universe namespace poisoning while ensuring that Rig 2 GPU silicon remains 100% quarantined for video diffusion passes.
+- **The Technical Challenge:** Bridging Node.js V8 execution with Python-native PyTorch codebases (StyleTTS-2, Parler-TTS, Piper) through CLI argument vectors rather than network sockets. The spawner must serialize complex, multi-dimensional somatic DSP vectors (laryngeal pitch offsets, formant warping, breath dilation, and vocal fry) into CLI flags, enforce strict CPU thread constraints (`OMP_NUM_THREADS=4`), trap process panics without crashing the parent event loop, and stream telemetry live to curses widgets without console thrashing.
+
+#### **Interface**
+
+- **`camp-candor/microservice-audio` (Self / main workspace):** Houses `10.generate.unit`, `00.microserviceaudio.unit`, `08.schemas.unit`, and `99.bus.unit`, coordinating state dispatch, process execution, and memory safety.
+- **`worker-sower-conductor` (Upstream Orchestrator):** Dispatches validated `TTSGenerationRequest` line payloads via `global.MICROSERVICEAUDIO.hunt` and extracts probed WAV durations to calculate integer frame allocations.
+- **`000.StyleTTS-2` & `000.parler-talk` (External Python Foundries):** Invoked via single-shot CLI execution (`synthesize.py`) to run diffusion vocoding and cross-attention text decoding on host CPU.
+- **`camp-candor/goblin-assets-audio` (Voice Asset Vault):** Supplies character reference audio waveforms (`.wav`) and precomputed style latent tensors (`.pt`) referenced in `voice_manifest.json`.
+- **`apps/995.library` (Blessed Runner Chassis):** Provides the immutable curses cockpit, grid partitioning, and the `cns00` switchboard console.
+
+#### **Interaction**
+
+- **The Blessed Cockpit Choice Axis (`98.menu.unit` & `85.choice.unit`):** When launched via `npx tsx apps/995.library/run.ts -t microserviceaudio`, the operator navigates to the `MICROSERVICEAUDIO MENU` on the left quadrant. Selecting `[1] SYNTHESIZE SCENE AUDIO` triggers `ActGen.EXEC_GENERATE` with active scene parameters.
+- **Real-Time ASCII Telemetry Streaming (`83.console.unit` / `cns00`):** As `10.generate.unit` spawns the Python subprocess, operational receipts stream directly to the right-hand console pane:
+  ```plaintext
+  >> [SPAWN] Dispatching Python Subprocess for character [char_elias]
+  :: [ENGINE] Engine selected: styletts2
+  >> [OK] Subprocess completed in 6420ms with Exit Code 0
+  ```
+
+If Python fails or crashes, `cns00` immediately surfaces the exit code and a truncated 300-character stderr trace in red highlight (`:: [FAIL] Subprocess crashed with code 1`) without throwing an unhandled exception or breaking the terminal layout.
+
+### You
+
+{{FOCUS : [Phase 1] Local Subprocess Spawner Harness Setup }}
+
+@agrav-check-00
+
+### Gemini
+
+### **Validation:**
+
+- **Progress:** [⚪ Waiting for Action ]
+
+# ANTIGRAVITY VERIFICATION & REMEDIATION HARNESS
+
+## TARGET FOCUS: `[Phase 1] Local Subprocess Spawner Harness Setup`
+
+## REPOSITORY: `000.microservice-audio`
+
+## TARGET UNITS: `packages/700.microserviceaudio/10.generate.unit/` & `packages/700.microserviceaudio/val/`
+
+## PRIMARY HARNESS: `apps/995.library` (Blessed Terminal Cockpit)
+
+### I. ARCHITECTURAL INVARIANT & ZERO-GRAVITY AUDIT MANDATE
+
+You are the **Antigravity Auditor and Autonomous Remediation Engine**. Your objective is to audit, stress-test, and certify the native Node.js ephemeral subprocess spawner harness within repository `000.microservice-audio`. You must execute an adversarial multi-level verification gauntlet to confirm that speech synthesis subprocesses run without long-lived web daemons, maintain strict zero-VRAM CPU resource boundaries, and stream operational telemetry cleanly to the Blessed terminal cockpit.
+
+If any check, type boundary, unit test, or terminal telemetry verification fails, you are empowered under the **In-Scope Remediation Mandate** to remediate all code within `packages/700.microserviceaudio/**` and `apps/995.library/run.ts`. You must **NEVER** modify or weaken `apps/995.library/995.library/**` (immutable runner boundary), weaken Zod contracts, or bypass failing test assertions.
+
+### II. MULTI-LEVEL VERIFICATION GAUNTLET
+
+#### Level 1: Monorepo Topology, Module Specifiers & Immutability Boundary
+
+Execute the pre-flight filesystem boundary audit:
+
+1. **Immutable Harness Guard:** Verify `apps/995.library/995.library/**` has 0 uncommitted or modified lines:
+  ```bash
+  git status -s apps/995.library/995.library/
+  ```
+  *Pass Condition:* Command outputs zero lines.
+2. **Absolute Ban on `packages/700.microserviceaudio/src/`:** Verify that no `src/` directory exists inside `packages/700.microserviceaudio/`:
+  ```bash
+  test ! -d packages/700.microserviceaudio/src
+  ```
+  *Pass Condition:* Exit code `0`. All unit code must reside in numbered unit directories (`10.generate.unit/`, etc.).
+3. **Explicit NodeNext `.js` Module Specifiers:** Assert all relative imports across `packages/700.microserviceaudio/10.generate.unit/` end with explicit `.js` extensions:
+  ```bash
+  git grep -n "from '\.\/" packages/700.microserviceaudio/10.generate.unit/ | grep -v "\.js'"
+  ```
+  *Pass Condition:* Zero matching lines found.
+4. **Pure 7-Bit ASCII Cleanliness:** Verify that zero UTF-8 multi-byte emojis or decorative characters exist across source and test files:
+  ```bash
+  git grep -P "[\x{80}-\x{FF}]" packages/700.microserviceaudio/10.generate.unit/ packages/700.microserviceaudio/val/
+  ```
+  *Pass Condition:* Exit code `1` (zero matches).
+
+#### Level 2: Static Contract & Subprocess Interface Inspection
+
+Inspect the source files of `10.generate.unit` for structural and functional compliance:
+
+1. **Interface Contract Completeness (`fce/generate.bit.ts` & `fce/generate.interface.ts`):**
+  - Must export `SomaticDspModifiers` (`basePitchShiftSemitones`, `formantWarpingFactor`, `breathinessPauseMultiplier`, `vocalFryDensity`).
+  - Must export `GenerateConfig` containing `engine: 'styletts2' | 'parler' | 'piper'`, `character: string`, `text: string`, `outputPath: string`, `referenceWav?: string`, `styleVectorPath?: string`, and `dspModifiers?: SomaticDspModifiers`.
+  - Must export `GenerateResult` containing `status: 'SUCCESS' | 'FAILED'`, `exitCode: number`, `executionTimeMs: number`, and `stderr?: string`.
+  - Must export `Generate` model interface tracking `activeProcessCount: number` and `generateBits: Record<string, GenerateBit>`.
+2. **Action & Reducer Routing (`generate.action.ts`, `generate.buzzer.ts`, `generate.reduce.ts`):**
+  - Declares `INIT_GENERATE`, `UPDATE_GENERATE`, and `EXEC_GENERATE`.
+  - Reducer must use `clone-deep` to clone incoming state before invoking buzzer routines.
+  - Buzzer barrel must cleanly re-export `initGenerate`, `updateGenerate`, and `execGenerate` from `./buz/generate.buzz.js`.
+3. **CLI Argument Serialization Logic (`buz/generate.buzz.ts`):**
+  - Asserts `buildCliArgs(cfg)` injects `--engine`, `--text`, `--character`, and `--output`.
+  - Asserts `--style-vector` is appended when `cfg.engine === 'styletts2'`.
+  - Asserts natural language `--description-prompt` is dynamically synthesized when `cfg.engine === 'parler'`.
+  - Asserts all defined somatic DSP modifiers are serialized to `--pitch-shift`, `--formant-warp`, `--breathiness`, and `--vocal-fry` flags.
+4. **Zero-VRAM Subprocess Environment Clamping (`buz/generate.buzz.ts`):**
+  - Asserts `execFile` spawns the Python interpreter with `CUDA_VISIBLE_DEVICES: ""` passed in the process environment to enforce the 0 MB dedicated GPU VRAM invariant on Rig 1.
+  - Asserts multi-threading CPU thread ceiling (`OMP_NUM_THREADS: '4'`) and a strict 30,000 ms execution timeout circuit breaker.
+
+#### Level 3: Adversarial Vitest Unit Execution Battery
+
+Execute the automated offline test suite covering the CLI argument builder and process handling:
+
+```bash
+npx vitest run packages/700.microserviceaudio/val/generate.test.ts
+```
+
+The test suite must verify:
+
+- **StyleTTS-2 Argument Vector Verification:** Serialization of full somatic vectors (`pitchShift`, `formantWarp`, `breathiness`, `vocalFry`) against expected command flags.
+- **Parler-TTS Prompt Generation:** Accurate synthesis of descriptive character emotion and room acoustic prompts into `--description-prompt`.
+- **Failure Handling & Code Trapping:** Verification that mock non-zero exit codes (e.g., Python syntax error or missing checkpoint) resolve gracefully with `status: 'FAILED'`, clean exit codes, and truncated stderr messages without unhandled Promise rejections.
+
+#### Level 4: Blessed Terminal Interface (TUI) Navigation & Telemetry Audit
+
+Validate that subprocess execution and telemetry integrate cleanly with the Blessed curses cockpit in `apps/995.library`:
+
+### Blessed Terminal Interface (TUI) Validation Instructions
+
+When validating features involving a Blessed Terminal Interface:
+
+1. **Human Keyboard Emulation:** Manually interact with the interface using real keyboard inputs and sequences (e.g., Arrow keys, `Tab`, `Enter`, `Escape`, character inputs, and configured shortcuts) exactly as an operator at a physical terminal would.
+2. **Step-by-Step Flow Navigation:** Drive end-to-end user journeys through sequential keystrokes rather than relying solely on headless mocks or direct state mutations. Allow render and event loop cycles between inputs.
+3. **Screen & Focus Verification:** Observe terminal screen buffers, cursor positions, active focused widgets, and visual updates after each keypress sequence to ensure the UI responds correctly.
+4. **Lifecycle & Clean Exit:** Verify proper startup rendering, navigation across interactive elements, and graceful termination routines (such as `q`, `Escape`, or `Ctrl+C`).
+
+### Blessed Terminal Interface (TUI) Validation & Autonomous Remediation Protocol
+
+#### 1. Authoritative Runner Entry Point
+
+- All interactive Blessed terminal tests **MUST** execute exclusively through:
+  ```bash
+  npm run dev
+  ```
+  *(Notice: flags like `-- --package=299.lore` are strictly forbidden; run only `npm run dev`)*.
+- Direct execution via bare `node` is strictly prohibited because `.ts` transpilation requires `tsx`.
+
+#### 2. Pre-Flight Boundary Self-Healing Guard
+
+- Before launching the runner, the auditor must assert harness integrity:
+  ```bash
+  git status -s apps/995.library/995.library/
+  ```
+- **Remediation Action:** If any dirty files or rogue stubs are detected inside `apps/995.library/995.library/`, the auditor must run `git restore apps/995.library/995.library/` immediately before proceeding to the build.
+- `apps/995.library/run.ts` is the only file with a permitted modification path.
+
+#### 3. In-Scope Remediation Mandate (Zero-Handoff Policy)
+
+- If Level 4 encounters:
+  - Missing CLI flags or runner options in `apps/995.library/run.ts` (permitted modification path).
+  - Unimplemented menu navigation or telemetry hooks in `<package>/98.menu.unit/`.
+  - Stale references in local package `tsconfig.json`.
+- **The auditor must NOT halt execution or report failure to the user.**
+- **The auditor must proactively implement the missing wiring**, re-execute the gauntlet, and verify clean end-to-end telemetry before sealing the audit.
+
+#### 4. Verification Integrity Boundary
+
+- The auditor should never:
+  - Weaken Zod schemas or basis-point bounds to bypass failures.
+  - Modify the immutable harness (`apps/995.library/995.library/**`).
+  - Comment out or weaken directive assertions.
+- Remediation is strictly limited to fixing runtime orchestration, restoring boundary corruptions, and fulfilling the mandated UI journey.
+
+### Step-by-Step TUI Journey for Phase 1:
+
+1. Boot the terminal runtime: `npm run dev`.
+2. Navigate the left-hand menu (`85.choice.unit` / `98.menu.unit`) using arrow keys to select `MICROSERVICEAUDIO MENU`.
+3. Trigger `[EXEC_GENERATE]` or line synthesis simulation.
+4. Observe right-hand console pane `cns00` (`83.console.unit`):
+  - Confirm receipt: `>> [SPAWN] Dispatching Python Subprocess for character [...]`
+  - Confirm engine receipt: `:: [ENGINE] Engine selected: ...`
+  - Confirm completion receipt: `>> [OK] Subprocess completed in ...ms with Exit Code 0`
+  - Confirm that if an intentional failure is triggered, `cns00` renders: `:: [FAIL] Subprocess crashed with code ...` followed by `:: [STDERR] ...` in clean 7-bit ASCII without throwing curses render panics.
+5. Press `Escape` or `q` to return to the root menu and gracefully exit the application.
+
+### III. AUTONOMOUS AUDIT SEALING & FEEDBACK DIRECTIVES
+
+Once all checks across Levels 1 through 4 have completed:
+
+1. **IF ALL AUDIT LEVELS PASS (100% COMPLIANT):**
+  - Update `[- **Progress:**]` at the top of this specification file with the exact current ISO timestamp and completion status:
+    ```markdown
+    - **Progress:** [🟢 Done - YYYY-MM-DDTHH:mm:ssZ - All Level 1-4 checks verified successfully]
+    ```
+  - Emit the final success feedback message to the console:
+    ```plaintext
+    ================================================================================
+    >> [ANTIGRAVITY HARNESS SEALED: PHASE 1 LOCAL SUBPROCESS HARNESS OPERATIONAL]
+    >> [LEVEL 1] Monorepo & File Boundaries: PASS (apps/995.library/ diff = 0)
+    >> [LEVEL 2] Interface & CLI Argument Contracts: PASS (StyleTTS-2, Parler, Piper)
+    >> [LEVEL 3] Vitest Subprocess Test Battery: PASS (100% Offline Passing)
+    >> [LEVEL 4] Blessed TUI Telemetry & Execution: PASS (cns00 Stream Verified)
+    >> [INVARIANT] Rig 1 Zero-VRAM Invariant Enforced (CUDA_VISIBLE_DEVICES="")
+    ================================================================================
+    ```
+2. **IF ANY AUDIT LEVEL FAILS AFTER AUTONOMOUS REMEDIATION ATTEMPTS:**
+  - Mark `[- **Progress:**]` with `[🔴 Failed]` and include the timestamp and exact failure vector:
+    ```markdown
+    - **Progress:** [🔴 Failed - YYYY-MM-DDTHH:mm:ssZ - Failed at Level X: <Detailed Failure Reason>]
+    ```
+  - Emit the terminal panic feedback message:
+    ```plaintext
+    ================================================================================
+    :: [ANTIGRAVITY HARNESS ABORTED: AUDIT GAUNTLET FAILED]
+    :: [REASON] <Exact Error Description / Boundary Violation / Vitest Failure>
+    :: [ACTION REQUIRED] Inspect remediation logs and resolve invariant conflict.
+    ================================================================================
+    ```
+
+### You
+
+{{FOCUS : [Phase 2] Non-Blocking Inode Polling File Watcher }}
+
+@jules-task-00
+
+### Gemini
+
+# TASK SPECIFICATION FOR JULES CODING AGENT
+
+## REPOSITORY: `000.microservice-audio`
+
+## TARGET WORKSPACE: `packages/700.microserviceaudio/10.generate.unit/` & `packages/700.microserviceaudio/val/`
+
+## EPIC: `[EPIC 002: NON-BLOCKING INODE POLLING FILE WATCHER]`
+
+## FEATURE: `[Phase 2] Non-Blocking Inode Polling File Watcher`
+
+## ROLE: Autonomous Execution Worker (Jules Sandboxed VM)
+
+### I. SYSTEM LAWS & ARCHITECTURAL INVARIANTS (TOP ANCHOR)
+
+1. **IMMUTABLE RUNNER BOUNDARY (`apps/995.library/`):** You are strictly forbidden from creating, touching, altering, or deleting files within `apps/995.library/995.library/**`. Your git diff across `apps/995.library/995.library/**` must evaluate to exactly 0 lines.
+2. **ABSOLUTE BAN ON `packages/700.microserviceaudio/src/`:** Under no circumstances may code reside inside a `src/` directory within `packages/700.microserviceaudio/`. All interfaces, models, buzzers, actions, reducers, and unit files must be placed directly inside root-level numbered unit directories (such as `10.generate.unit/`) and `val/`.
+3. **ATOMIC SAME-FILESYSTEM INODE PROMOTION:** Temporary staging files (`${stem}.wav.tmp`) must be staged in the exact same directory as the target file (`${stem}.wav`). Promotion must occur strictly via atomic POSIX `rename` system calls (`fs.promises.rename` or `fs.renameSync`), eliminating partially written buffer reads by downstream optical compositors.
+4. **NON-BLOCKING ASYNC POLLING (ZERO MAIN-THREAD BLOCKING):** Synchronous sleep loops (e.g., `Atomics.wait` or `while (Date.now() < end)`) are strictly banned. Polling for file presence and byte-count stabilization must execute via non-blocking asynchronous timers (`setTimeout` or `Promise` delays scheduled on the Node.js event loop).
+5. **PURE 7-BIT ASCII TELEMETRY STREAMING:** Multi-byte UTF-8 emojis and decorative unicode glyphs are prohibited. Operational telemetry streamed to Blessed console pane `cns00` must strictly use 7-bit clean ASCII tokens (`>>`, `::`, `[OK]`, `[FAIL]`, `[POLL]`, `[STABILIZED]`, `[RENAME]`, `[TIMEOUT]`).
+6. **NODENEXT SPECIFIERS:** All relative import paths across `packages/700.microserviceaudio/` must explicitly terminate with `.js` extensions.
+
+### II. TARGET FILE MANIFEST
+
+- `packages/700.microserviceaudio/10.generate.unit/fce/generate.bit.ts` (MODIFY: add polling configuration and stabilization telemetry interfaces)
+- `packages/700.microserviceaudio/10.generate.unit/fce/generate.interface.ts` (MODIFY: track active polling watches)
+- `packages/700.microserviceaudio/10.generate.unit/generate.action.ts` (MODIFY: export `POLL_FILE_STABILIZATION` action)
+- `packages/700.microserviceaudio/10.generate.unit/generate.buzzer.ts` (MODIFY: export polling buzzer)
+- `packages/700.microserviceaudio/10.generate.unit/buz/generate.buzz.ts` (MODIFY: integrate non-blocking polling and atomic rename promotion)
+- `packages/700.microserviceaudio/10.generate.unit/generate.reduce.ts` (MODIFY: route `POLL_FILE_STABILIZATION`)
+- `packages/700.microserviceaudio/val/watcher.test.ts` (NEW: comprehensive unit tests for inode quiescence and atomic promotion)
+
+### III. FILE IMPLEMENTATION SPECIFICATIONS
+
+#### File 1: `packages/700.microserviceaudio/10.generate.unit/fce/generate.bit.ts`
+
+```typescript
+export interface SomaticDspModifiers {
+  basePitchShiftSemitones?: number;
+  formantWarpingFactor?: number;
+  breathinessPauseMultiplier?: number;
+  vocalFryDensity?: number;
+}
+
+export interface PollingConfig {
+  stagingPath: string;
+  targetPath: string;
+  intervalMs?: number;
+  timeoutMs?: number;
+  stabilityChecksRequired?: number;
+}
+
+export interface PollingResult {
+  status: 'STABILIZED' | 'TIMEOUT' | 'INODE_ERROR';
+  bytesConfirmed: number;
+  pollAttempts: number;
+  elapsedMs: number;
+  error?: string;
+}
+
+export interface GenerateConfig {
+  engine: 'styletts2' | 'parler' | 'piper';
+  character: string;
+  text: string;
+  emotion?: string;
+  tonePacing?: number;
+  outputPath: string;
+  referenceWav?: string;
+  styleVectorPath?: string;
+  dspModifiers?: SomaticDspModifiers;
+  pythonPath?: string;
+  synthesizeScriptPath?: string;
+  polling?: PollingConfig;
+}
+
+export interface GenerateResult {
+  status: 'SUCCESS' | 'FAILED';
+  outputPath: string;
+  exitCode: number;
+  executionTimeMs: number;
+  bytesConfirmed?: number;
+  stderr?: string;
+}
+
+export default interface GenerateBit {
+  idx: string;
+  src?: string;
+  val?: number;
+  dat?: GenerateConfig;
+  pollDat?: PollingConfig;
+  pollResult?: PollingResult;
+  result?: GenerateResult;
+  slv?: (result: { genBit: GenerateBit }) => void;
+}
+```
+
+#### File 2: `packages/700.microserviceaudio/10.generate.unit/fce/generate.interface.ts`
+
+```typescript
+import type GenerateBit from './generate.bit.js';
+
+export default interface Generate {
+  idx: string;
+  activeProcessCount: number;
+  activePollingWatches: number;
+  generateBits: Record<string, GenerateBit>;
+}
+```
+
+#### File 3: `packages/700.microserviceaudio/10.generate.unit/generate.action.ts`
+
+```typescript
+import { Action } from '../99.core/interface/action.interface.js';
+import GenerateBit from './fce/generate.bit.js';
+
+export const INIT_GENERATE = '[Generate action] Init Generate';
+export class InitGenerate implements Action {
+  readonly type = INIT_GENERATE;
+  constructor(public bale: GenerateBit) {}
+}
+
+export const UPDATE_GENERATE = '[Generate action] Update Generate';
+export class UpdateGenerate implements Action {
+  readonly type = UPDATE_GENERATE;
+  constructor(public bale: GenerateBit) {}
+}
+
+export const EXEC_GENERATE = '[Generate action] Exec Generate';
+export class ExecGenerate implements Action {
+  readonly type = EXEC_GENERATE;
+  constructor(public bale: GenerateBit) {}
+}
+
+export const POLL_FILE_STABILIZATION = '[Generate action] Poll File Stabilization';
+export class PollFileStabilization implements Action {
+  readonly type = POLL_FILE_STABILIZATION;
+  constructor(public bale: GenerateBit) {}
+}
+
+export type Actions = InitGenerate | UpdateGenerate | ExecGenerate | PollFileStabilization;
+```
+
+#### File 4: `packages/700.microserviceaudio/10.generate.unit/generate.buzzer.ts`
+
+```typescript
+export {
+  initGenerate,
+  updateGenerate,
+  execGenerate,
+  pollFileStabilization,
+  waitForBufferStabilization,
+} from './buz/generate.buzz.js';
+```
+
+#### File 5: `packages/700.microserviceaudio/10.generate.unit/buz/generate.buzz.ts`
+
+```typescript
+import { execFile } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+import { GenerateModel } from '../generate.model.js';
+import GenerateBit, {
+  GenerateConfig,
+  GenerateResult,
+  PollingConfig,
+  PollingResult,
+} from '../fce/generate.bit.js';
+import State from '../../99.core/state.js';
+
+const UPDATE_CONSOLE = '[Console action] Update Console';
+
+const logConsole = async (src: string): Promise<void> => {
+  if ((globalThis as any).LIBRARY?.hunt) {
+    await (globalThis as any).LIBRARY.hunt(UPDATE_CONSOLE, {
+      idx: 'cns00',
+      src,
+    });
+  }
+};
+
+const delay = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+export const initGenerate = (
+  cpy: GenerateModel,
+  bal: GenerateBit,
+  ste: State,
+): GenerateModel => {
+  cpy.activeProcessCount = 0;
+  cpy.activePollingWatches = 0;
+  cpy.generateBits = {};
+  if (bal.slv) {
+    bal.slv({ genBit: { idx: 'init-generate', val: 1 } });
+  }
+  return cpy;
+};
+
+export const updateGenerate = (
+  cpy: GenerateModel,
+  bal: GenerateBit,
+  ste: State,
+): GenerateModel => {
+  if (bal.idx) {
+    cpy.generateBits[bal.idx] = bal;
+  }
+  if (bal.slv) {
+    bal.slv({ genBit: bal });
+  }
+  return cpy;
+};
+
+export const buildCliArgs = (cfg: GenerateConfig): string[] => {
+  const args: string[] = [
+    '--engine', cfg.engine,
+    '--text', cfg.text,
+    '--character', cfg.character,
+    '--output', cfg.outputPath,
+  ];
+
+  if (cfg.emotion) args.push('--emotion', cfg.emotion);
+  if (cfg.tonePacing !== undefined) args.push('--pacing', cfg.tonePacing.toString());
+
+  if (cfg.engine === 'styletts2' && cfg.styleVectorPath) {
+    args.push('--style-vector', cfg.styleVectorPath);
+  }
+  if (cfg.engine === 'parler') {
+    const descriptionPrompt = `Voice of ${cfg.character}. Emotion: ${cfg.emotion || 'neutral'}. High quality audio, dry room acoustics.`;
+    args.push('--description-prompt', descriptionPrompt);
+  }
+  if (cfg.referenceWav) {
+    args.push('--reference-wav', cfg.referenceWav);
+  }
+
+  if (cfg.dspModifiers) {
+    if (cfg.dspModifiers.basePitchShiftSemitones !== undefined) {
+      args.push('--pitch-shift', cfg.dspModifiers.basePitchShiftSemitones.toString());
+    }
+    if (cfg.dspModifiers.formantWarpingFactor !== undefined) {
+      args.push('--formant-warp', cfg.dspModifiers.formantWarpingFactor.toString());
+    }
+    if (cfg.dspModifiers.breathinessPauseMultiplier !== undefined) {
+      args.push('--breathiness', cfg.dspModifiers.breathinessPauseMultiplier.toString());
+    }
+    if (cfg.dspModifiers.vocalFryDensity !== undefined) {
+      args.push('--vocal-fry', cfg.dspModifiers.vocalFryDensity.toString());
+    }
+  }
+
+  return args;
+};
+
+export const waitForBufferStabilization = async (
+  cfg: PollingConfig,
+): Promise<PollingResult> => {
+  const interval = cfg.intervalMs ?? 200;
+  const timeout = cfg.timeoutMs ?? 30000;
+  const requiredStableCycles = cfg.stabilityChecksRequired ?? 2;
+
+  const t0 = Date.now();
+  let attempts = 0;
+  let lastSize = -1;
+  let stableCount = 0;
+
+  // Same-Filesystem Inode Guard: Verify staging and target reside in the identical directory
+  if (path.resolve(path.dirname(cfg.stagingPath)) !== path.resolve(path.dirname(cfg.targetPath))) {
+    const err = 'CROSS_DIRECTORY_INODE_VIOLATION: Staging and target must reside in the same parent directory.';
+    await logConsole(`:: [FAIL] ${err}`);
+    return {
+      status: 'INODE_ERROR',
+      bytesConfirmed: 0,
+      pollAttempts: 0,
+      elapsedMs: 0,
+      error: err,
+    };
+  }
+
+  while (Date.now() - t0 < timeout) {
+    attempts += 1;
+    await delay(interval);
+
+    let stats: fs.Stats | null = null;
+    try {
+      if (fs.existsSync(cfg.stagingPath)) {
+        stats = fs.statSync(cfg.stagingPath);
+      }
+    } catch {
+      // Inode locked or transiently unreadable
+      stats = null;
+    }
+
+    if (!stats) {
+      stableCount = 0;
+      lastSize = -1;
+      continue;
+    }
+
+    const currentSize = stats.size;
+
+    // Reject 0-byte poison buffers immediately during stabilization phase
+    if (currentSize > 0 && currentSize === lastSize) {
+      stableCount += 1;
+    } else {
+      stableCount = 0;
+      lastSize = currentSize;
+    }
+
+    if (stableCount >= requiredStableCycles) {
+      const elapsed = Date.now() - t0;
+      await logConsole(`>> [POLL] Inode stabilized at ${currentSize} bytes (${attempts} attempts, ${elapsed}ms)`);
+
+      try {
+        // Atomic POSIX pointer swap on the same filesystem
+        fs.renameSync(cfg.stagingPath, cfg.targetPath);
+        await logConsole(`>> [RENAME] Promoted [${path.basename(cfg.stagingPath)}] -> [${path.basename(cfg.targetPath)}] [OK]`);
+
+        return {
+          status: 'STABILIZED',
+          bytesConfirmed: currentSize,
+          pollAttempts: attempts,
+          elapsedMs: elapsed,
+        };
+      } catch (renameErr: any) {
+        const cleanErr = (renameErr?.message || 'RENAME_FAILED').slice(0, 150);
+        await logConsole(`:: [FAIL] Atomic rename failed: ${cleanErr}`);
+        return {
+          status: 'INODE_ERROR',
+          bytesConfirmed: currentSize,
+          pollAttempts: attempts,
+          elapsedMs: elapsed,
+          error: cleanErr,
+        };
+      }
+    }
+  }
+
+  const totalElapsed = Date.now() - t0;
+  await logConsole(`:: [TIMEOUT] Polling exceeded timeout (${timeout}ms) for [${path.basename(cfg.stagingPath)}]`);
+
+  // Teardown: unlink dangling orphaned .tmp file on timeout
+  try {
+    if (fs.existsSync(cfg.stagingPath)) {
+      fs.unlinkSync(cfg.stagingPath);
+      await logConsole(`:: [PURGE] Unlinked orphaned staging buffer: ${cfg.stagingPath}`);
+    }
+  } catch {}
+
+  return {
+    status: 'TIMEOUT',
+    bytesConfirmed: Math.max(0, lastSize),
+    pollAttempts: attempts,
+    elapsedMs: totalElapsed,
+    error: `TIMEOUT_EXCEEDED_${timeout}MS`,
+  };
+};
+
+export const pollFileStabilization = async (
+  cpy: GenerateModel,
+  bal: GenerateBit,
+  ste: State,
+): Promise<GenerateModel> => {
+  const pollCfg = bal.pollDat;
+  if (!pollCfg) {
+    if (bal.slv) {
+      bal.slv({
+        genBit: {
+          idx: bal.idx,
+          pollResult: {
+            status: 'INODE_ERROR',
+            bytesConfirmed: 0,
+            pollAttempts: 0,
+            elapsedMs: 0,
+            error: 'MISSING_POLL_CONFIG',
+          },
+        },
+      });
+    }
+    return cpy;
+  }
+
+  cpy.activePollingWatches += 1;
+  const result = await waitForBufferStabilization(pollCfg);
+  cpy.activePollingWatches = Math.max(0, cpy.activePollingWatches - 1);
+
+  bal.pollResult = result;
+  if (bal.slv) {
+    bal.slv({ genBit: bal });
+  }
+  return cpy;
+};
+
+export const execGenerate = async (
+  cpy: GenerateModel,
+  bal: GenerateBit,
+  ste: State,
+): Promise<GenerateModel> => {
+  const cfg = bal.dat;
+  if (!cfg) {
+    await logConsole(':: [FAIL] Missing GenerateConfig payload in execGenerate');
+    if (bal.slv) {
+      bal.slv({
+        genBit: {
+          idx: bal.idx,
+          result: {
+            status: 'FAILED',
+            outputPath: '',
+            exitCode: 1,
+            executionTimeMs: 0,
+            stderr: 'MISSING_GENERATE_CONFIG',
+          },
+        },
+      });
+    }
+    return cpy;
+  }
+
+  // Derive staging path (.tmp) and canonical final target path
+  const targetPath = cfg.outputPath.endsWith('.tmp')
+    ? cfg.outputPath.slice(0, -4)
+    : cfg.outputPath;
+  const stagingPath = cfg.outputPath.endsWith('.tmp')
+    ? cfg.outputPath
+    : `${cfg.outputPath}.tmp`;
+
+  // Inject computed staging output into Python invocation
+  const adjustedCfg: GenerateConfig = {
+    ...cfg,
+    outputPath: stagingPath,
+  };
+
+  const pythonExecutable = adjustedCfg.pythonPath || process.env.PYTHON_BIN || 'python';
+  const scriptPath = adjustedCfg.synthesizeScriptPath || path.resolve(process.cwd(), 'scripts/synthesize.py');
+  const cliArgs = [scriptPath, ...buildCliArgs(adjustedCfg)];
+
+  await logConsole(`>> [SPAWN] Dispatching Python Subprocess for character [${adjustedCfg.character}]`);
+
+  cpy.activeProcessCount += 1;
+  const t0 = Date.now();
+
+  return new Promise<GenerateModel>((resolve) => {
+    const spawnEnv = {
+      ...process.env,
+      CUDA_VISIBLE_DEVICES: '',
+      OMP_NUM_THREADS: '4',
+      MKL_NUM_THREADS: '4',
+    };
+
+    execFile(
+      pythonExecutable,
+      cliArgs,
+      { env: spawnEnv, timeout: 30000 },
+      async (error, stdout, stderr) => {
+        cpy.activeProcessCount = Math.max(0, cpy.activeProcessCount - 1);
+        const t1 = Date.now();
+        const durationMs = t1 - t0;
+
+        if (error) {
+          const exitCode = typeof error.code === 'number' ? error.code : 1;
+          const cleanErr = (stderr || error.message || 'UNKNOWN_ERROR').trim().slice(0, 300);
+          await logConsole(`:: [FAIL] Subprocess crashed with code ${exitCode} after ${durationMs}ms`);
+
+          // Clean up dangling .tmp file if crashed mid-write
+          try {
+            if (fs.existsSync(stagingPath)) fs.unlinkSync(stagingPath);
+          } catch {}
+
+          const result: GenerateResult = {
+            status: 'FAILED',
+            outputPath: targetPath,
+            exitCode,
+            executionTimeMs: durationMs,
+            stderr: cleanErr,
+          };
+
+          bal.result = result;
+          if (bal.slv) bal.slv({ genBit: bal });
+          resolve(cpy);
+          return;
+        }
+
+        await logConsole(`>> [SUBPROCESS:OK] Child process finished in ${durationMs}ms. Initiating buffer stabilization check...`);
+
+        // Phase 2: Inode Polling & Quiescence Verification Loop
+        cpy.activePollingWatches += 1;
+        const pollResult = await waitForBufferStabilization({
+          stagingPath,
+          targetPath,
+          intervalMs: cfg.polling?.intervalMs ?? 200,
+          timeoutMs: cfg.polling?.timeoutMs ?? 30000,
+          stabilityChecksRequired: cfg.polling?.stabilityChecksRequired ?? 2,
+        });
+        cpy.activePollingWatches = Math.max(0, cpy.activePollingWatches - 1);
+
+        if (pollResult.status !== 'STABILIZED') {
+          await logConsole(`:: [FAIL] Buffer failed to stabilize: ${pollResult.error || pollResult.status}`);
+          const result: GenerateResult = {
+            status: 'FAILED',
+            outputPath: targetPath,
+            exitCode: 1,
+            executionTimeMs: durationMs + pollResult.elapsedMs,
+            stderr: pollResult.error || 'STABILIZATION_FAILED',
+          };
+          bal.result = result;
+          if (bal.slv) bal.slv({ genBit: bal });
+          resolve(cpy);
+          return;
+        }
+
+        const result: GenerateResult = {
+          status: 'SUCCESS',
+          outputPath: targetPath,
+          exitCode: 0,
+          executionTimeMs: durationMs + pollResult.elapsedMs,
+          bytesConfirmed: pollResult.bytesConfirmed,
+        };
+
+        bal.result = result;
+        if (bal.slv) bal.slv({ genBit: bal });
+        resolve(cpy);
+      },
+    );
+  });
+};
+```
+
+#### File 6: `packages/700.microserviceaudio/10.generate.unit/generate.reduce.ts`
+
+```typescript
+import clone from 'clone-deep';
+import * as Act from './generate.action.js';
+import { GenerateModel } from './generate.model.js';
+import * as Buzz from './generate.buzzer.js';
+import State from '../99.core/state.js';
+
+export function reducer(
+  model: GenerateModel = new GenerateModel(),
+  act: Act.Actions,
+  state?: State,
+) {
+  switch (act.type) {
+    case Act.INIT_GENERATE:
+      return Buzz.initGenerate(clone(model), act.bale, state!);
+    case Act.UPDATE_GENERATE:
+      return Buzz.updateGenerate(clone(model), act.bale, state!);
+    case Act.EXEC_GENERATE:
+      return Buzz.execGenerate(clone(model), act.bale, state!);
+    case Act.POLL_FILE_STABILIZATION:
+      return Buzz.pollFileStabilization(clone(model), act.bale, state!);
+    default:
+      return model;
+  }
+}
+```
+
+#### File 7: `packages/700.microserviceaudio/val/watcher.test.ts`
+
+```typescript
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+import { waitForBufferStabilization } from '../10.generate.unit/buz/generate.buzz.js';
+
+describe('10.generate.unit: Non-Blocking Inode Polling File Watcher', () => {
+  let testDir: string;
+
+  beforeEach(() => {
+    testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'watcher-test-'));
+  });
+
+  afterEach(() => {
+    try {
+      fs.rmSync(testDir, { recursive: true, force: true });
+    } catch {}
+  });
+
+  it('detects byte-count quiescence and promotes .tmp to .wav via atomic rename', async () => {
+    const stagingPath = path.join(testDir, 'test_stem.wav.tmp');
+    const targetPath = path.join(testDir, 'test_stem.wav');
+
+    // Simulate asynchronous writer writing chunks to the file
+    fs.writeFileSync(stagingPath, Buffer.alloc(512, 0x01));
+
+    setTimeout(() => {
+      fs.appendFileSync(stagingPath, Buffer.alloc(1024, 0x02));
+    }, 150);
+
+    const result = await waitForBufferStabilization({
+      stagingPath,
+      targetPath,
+      intervalMs: 100,
+      timeoutMs: 5000,
+      stabilityChecksRequired: 2,
+    });
+
+    expect(result.status).toBe('STABILIZED');
+    expect(result.bytesConfirmed).toBe(1536);
+    expect(fs.existsSync(stagingPath)).toBe(false);
+    expect(fs.existsSync(targetPath)).toBe(true);
+    expect(fs.statSync(targetPath).size).toBe(1536);
+  });
+
+  it('times out and unlinks orphaned staging file if buffer never materializes', async () => {
+    const stagingPath = path.join(testDir, 'missing_stem.wav.tmp');
+    const targetPath = path.join(testDir, 'missing_stem.wav');
+
+    const result = await waitForBufferStabilization({
+      stagingPath,
+      targetPath,
+      intervalMs: 50,
+      timeoutMs: 300,
+      stabilityChecksRequired: 2,
+    });
+
+    expect(result.status).toBe('TIMEOUT');
+    expect(fs.existsSync(stagingPath)).toBe(false);
+    expect(fs.existsSync(targetPath)).toBe(false);
+  });
+
+  it('rejects cross-directory staging and target configurations to prevent non-atomic copy degradation', async () => {
+    const stagingPath = path.join(testDir, 'test_stem.wav.tmp');
+    const altDir = fs.mkdtempSync(path.join(os.tmpdir(), 'watcher-alt-'));
+    const targetPath = path.join(altDir, 'test_stem.wav');
+
+    fs.writeFileSync(stagingPath, Buffer.alloc(128, 0xaa));
+
+    const result = await waitForBufferStabilization({
+      stagingPath,
+      targetPath,
+      intervalMs: 50,
+      timeoutMs: 1000,
+    });
+
+    expect(result.status).toBe('INODE_ERROR');
+    expect(result.error).toContain('CROSS_DIRECTORY_INODE_VIOLATION');
+
+    fs.rmSync(altDir, { recursive: true, force: true });
+  });
+});
+```
+
+### IV. EXECUTION GAUNTLET & VERIFICATION SEQUENCE
+
+Execute the following verification sequence in your shell to certify compliance:
+
+```bash
+# 1. Typecheck the package
+npm run check:types
+
+# 2. Run unit tests covering the non-blocking polling watcher
+npx vitest run packages/700.microserviceaudio/val/watcher.test.ts
+
+# 3. Assert zero modification boundary on the immutable curses library
+git status -s apps/995.library/995.library/
+# (Must output zero lines)
+
+# 4. Enforce pure 7-bit ASCII
+git grep -P "[\x{80}-\x{FF}]" packages/700.microserviceaudio/10.generate.unit/ packages/700.microserviceaudio/val/
+# (Must exit with code 1; zero non-ASCII bytes found)
+```
+
+### COMMAND TO JULES CODING AGENT:
+
+Upon successful completion and verification of the test suite and execution checks, update the metadata below: Set `- **Status:**` to `[🟢 Done]`. If any test, typecheck, or boundary check fails, set `- **Status:**` to `[🟡 In Progress]`.
+
+### **Attributes:**
+
+- **Status:** [⚪ Backlog ]
+- **Priority:** [🔴 High]
+- **Time Estimate:** [1 Hour]
+- **Tags:** [infrastructure, polling-watcher, inode-quiescence, atomic-rename]
+- **Epic:** [EPIC 002: NON-BLOCKING INODE POLLING FILE WATCHER]
+- **Value:** [Partial-Write Prevention]
+- **Sprint Points:** [2]
+- **Component:** [Audio Subprocess Engine / packages/700.microserviceaudio/10.generate.unit]
+- **Owner:** [Autonomous Agent Jules]
+- **Target Release:** [Sprint 1 / Day 001]
+- **Risk Level:** [Medium]
+- **Reporter:** [Architecture Orchestrator]
+
+### You
+
+{{FOCUS : [Phase 2] Non-Blocking Inode Polling File Watcher }}
+
+@jules-complete-check
+
+### Gemini
+
+### **Validation:**
+
+- **Progress:** [⚪ Waiting for Action ]
+
+### **PRE-EXECUTION COMPLETION AUDIT & CONDITIONAL DISPATCH FOR JULES**
+
+**Agent Directive:** Before executing any file modifications, buzzer implementations, or test authoring for **[Phase 2] Non-Blocking Inode Polling File Watcher**, the Jules Coding Agent must execute an audit across `packages/700.microserviceaudio/10.generate.unit/` and `packages/700.microserviceaudio/val/` to verify whether this functionality is already implemented and operational on disk.
+
+Calculate the verified completion percentage across the 12 inspection criteria:
+
+$$
+\text{Completion Percentage} = \left(\frac{\text{Passed Checks}}{12}\right) \times 100\%
+$$
+
+#### **Pre-Flight Completion Inspection Checklist (12 Verification Criteria)**
+
+- [ ] **Check 1: Clean Monorepo Boundary Guard (`apps/995.library/995.library/`)**
+  - **Inspection:** Confirm that the immutable runner harness has zero modified or untracked lines.
+  - **Command:** `git status -s apps/995.library/995.library/`
+  - **Criteria:** Process outputs exactly 0 lines.
+- [ ] **Check 2: Absolute Ban on `packages/700.microserviceaudio/src/`**
+  - **Inspection:** Confirm that no `src/` directory exists inside the package root.
+  - **Command:** `node -e "const fs = require('fs'); if (fs.existsSync('packages/700.microserviceaudio/src')) process.exit(1);"`
+  - **Criteria:** Process exits with code 0 (pure unit-colocated layout preserved).
+- [ ] **Check 3: Polling Interfaces & Data Contracts (`fce/generate.bit.ts`)**
+  - **Inspection:** Verify `PollingConfig` (`stagingPath`, `targetPath`, `intervalMs`, `timeoutMs`, `stabilityChecksRequired`) and `PollingResult` (`status`, `bytesConfirmed`, `pollAttempts`, `elapsedMs`, `error`) are exported.
+  - **Command:** `node -e "const fs = require('fs'); const content = fs.readFileSync('packages/700.microserviceaudio/10.generate.unit/fce/generate.bit.ts', 'utf8'); if (!content.includes('interface PollingConfig') || !content.includes('interface PollingResult')) process.exit(1);"`
+  - **Criteria:** Process exits with code 0.
+- [ ] **Check 4: Unit Model Inode Tracking (`fce/generate.interface.ts` & `generate.model.ts`)**
+  - **Inspection:** Verify that `activePollingWatches: number` is declared on `Generate` and initialized in `GenerateModel`.
+  - **Command:** `node -e "const fs = require('fs'); const iface = fs.readFileSync('packages/700.microserviceaudio/10.generate.unit/fce/generate.interface.ts', 'utf8'); const model = fs.readFileSync('packages/700.microserviceaudio/10.generate.unit/generate.model.ts', 'utf8'); if (!iface.includes('activePollingWatches') || !model.includes('activePollingWatches')) process.exit(1);"`
+  - **Criteria:** Process exits with code 0.
+- [ ] **Check 5: Polling Action Registration (`generate.action.ts`)**
+  - **Inspection:** Verify `POLL_FILE_STABILIZATION` and action class `PollFileStabilization` are declared and exported.
+  - **Command:** `node -e "const fs = require('fs'); const content = fs.readFileSync('packages/700.microserviceaudio/10.generate.unit/generate.action.ts', 'utf8'); if (!content.includes('POLL_FILE_STABILIZATION') || !content.includes('PollFileStabilization')) process.exit(1);"`
+  - **Criteria:** Process exits with code 0.
+- [ ] **Check 6: Buzzer Barrel Re-Export (`generate.buzzer.ts`)**
+  - **Inspection:** Verify that `pollFileStabilization` and `waitForBufferStabilization` are exported from `./buz/generate.buzz.js`.
+  - **Command:** `node -e "const fs = require('fs'); const content = fs.readFileSync('packages/700.microserviceaudio/10.generate.unit/generate.buzzer.ts', 'utf8'); if (!content.includes('pollFileStabilization') || !content.includes('waitForBufferStabilization')) process.exit(1);"`
+  - **Criteria:** Process exits with code 0.
+- [ ] **Check 7: Same-Filesystem Directory Partition Guard (`buz/generate.buzz.ts`)**
+  - **Inspection:** Verify that `waitForBufferStabilization` verifies `path.dirname(stagingPath) === path.dirname(targetPath)` and halts on cross-directory boundary breaches.
+  - **Command:** `node -e "const fs = require('fs'); const content = fs.readFileSync('packages/700.microserviceaudio/10.generate.unit/buz/generate.buzz.ts', 'utf8'); if (!content.includes('CROSS_DIRECTORY_INODE_VIOLATION')) process.exit(1);"`
+  - **Criteria:** Process exits with code 0.
+- [ ] **Check 8: Non-Blocking Event-Loop Polling & Quiescence Checker (`buz/generate.buzz.ts`)**
+  - **Inspection:** Confirm non-blocking delay intervals, stat checks tracking byte quiescence across consecutive loops, and zero-byte buffer rejection logic are present.
+  - **Command:** `node -e "const fs = require('fs'); const content = fs.readFileSync('packages/700.microserviceaudio/10.generate.unit/buz/generate.buzz.ts', 'utf8'); if (!content.includes('stats.size') || !content.includes('stableCount') || !content.includes('requiredStableCycles')) process.exit(1);"`
+  - **Criteria:** Process exits with code 0.
+- [ ] **Check 9: Atomic POSIX Promotion & Staging Unlink Teardown (`buz/generate.buzz.ts`)**
+  - **Inspection:** Confirm that `fs.renameSync(stagingPath, targetPath)` promotes stabilized buffers and `fs.unlinkSync` cleans orphaned staging files on timeout or process error.
+  - **Command:** `node -e "const fs = require('fs'); const content = fs.readFileSync('packages/700.microserviceaudio/10.generate.unit/buz/generate.buzz.ts', 'utf8'); if (!content.includes('renameSync') || !content.includes('unlinkSync')) process.exit(1);"`
+  - **Criteria:** Process exits with code 0.
+- [ ] **Check 10: Reducer Delegation Integration (`generate.reduce.ts`)**
+  - **Inspection:** Verify that `generate.reduce.ts` routes `Act.POLL_FILE_STABILIZATION` to `Buzz.pollFileStabilization` using `clone-deep`.
+  - **Command:** `node -e "const fs = require('fs'); const content = fs.readFileSync('packages/700.microserviceaudio/10.generate.unit/generate.reduce.ts', 'utf8'); if (!content.includes('POLL_FILE_STABILIZATION') || !content.includes('pollFileStabilization')) process.exit(1);"`
+  - **Criteria:** Process exits with code 0.
+- [ ] **Check 11: Dedicated Vitest Watcher Suite Existence (`val/watcher.test.ts`)**
+  - **Inspection:** Verify that `packages/700.microserviceaudio/val/watcher.test.ts` exists on disk and imports `waitForBufferStabilization`.
+  - **Command:** `node -e "const fs = require('fs'); if (!fs.existsSync('packages/700.microserviceaudio/val/watcher.test.ts')) process.exit(1);"`
+  - **Criteria:** Process exits with code 0.
+- [ ] **Check 12: Vitest Execution & Clean ASCII Compliance**
+  - **Inspection:** Execute the watcher test suite and confirm pure 7-bit ASCII compliance across unit files.
+  - **Command:** `npx vitest run packages/700.microserviceaudio/val/watcher.test.ts && node -e "const { execSync } = require('child_process'); try { execSync('git grep -P \"[\\\\x{80}-\\\\x{FF}]\" packages/700.microserviceaudio/10.generate.unit/ packages/700.microserviceaudio/val/watcher.test.ts'); process.exit(1); } catch { process.exit(0); }"`
+  - **Criteria:** Tests pass 100% green and zero non-ASCII characters are detected.
+
+#### **OPERATIONAL HALTING & CONDITIONAL EXECUTION RULES**
+
+1. **IF COMPLETION IS $\ge 67\%$ (8 OR MORE OF THE 12 CHECKS PASS):**
+  - The deliverables for **[Phase 2] Non-Blocking Inode Polling File Watcher** are already substantially implemented, schema-locked, and operational on local disk.
+  - Calculate the exact completion percentage.
+  - Update `[- **Progress:**]` at the top of this specification file to:
+    ```markdown
+    - **Progress:** [🟢 Completed on Wednesday, November 4, 2026 at 7:15 PM EST - Audit Score: <PERCENTAGE>% - Pre-existing Work Verified]
+    ```
+  - Append an explicit halt statement directly beneath the `[- **Progress:**]` line:
+    ```plaintext
+    - Halt Reason: Pre-flight audit confirmed that >= 67% of Phase 2 Non-Blocking Inode Polling File Watcher requirements—including PollingConfig/PollingResult interfaces, same-filesystem inode guard, asynchronous quiescence polling loop, atomic POSIX renameSync promotion, orphaned buffer teardown, Candor reducer wiring, pure 7-bit ASCII compliance, and green Vitest assertions in val/watcher.test.ts—are already present and functional in packages/700.microserviceaudio/10.generate.unit/. Operational execution halted immediately to prevent redundant file modifications or overwrites.
+    ```
+  - Write and save the original directive file with this updated header and **STOP IMMEDIATELY!**
+  - **STRICT AGENT BOUNDARY:** The Jules Coding Agent must strictly understand that this status and timestamp update is the **ONLY** update, work, and activity to be induced from this prompt. Do **NOT** rewrite files, do **NOT** modify existing tests, and do **NOT** execute redundant implementations.
+2. **IF COMPLETION IS $< 67\%$ (BETWEEN 0% AND 66% PASS):**
+  - Update `[- **Progress:**]` to `[🟡 In Progress]`.
+  - Proceed to implement and fulfill all missing requirements across:
+    - `packages/700.microserviceaudio/10.generate.unit/fce/generate.bit.ts`
+    - `packages/700.microserviceaudio/10.generate.unit/fce/generate.interface.ts`
+    - `packages/700.microserviceaudio/10.generate.unit/generate.action.ts`
+    - `packages/700.microserviceaudio/10.generate.unit/generate.buzzer.ts`
+    - `packages/700.microserviceaudio/10.generate.unit/buz/generate.buzz.ts`
+    - `packages/700.microserviceaudio/10.generate.unit/generate.reduce.ts`
+    - `packages/700.microserviceaudio/val/watcher.test.ts`
+  - Ensure `packages/700.microserviceaudio/src/` is **NEVER** created (pure unit-colocated layout).
+  - Ensure `apps/995.library/` remains 100% untouched (0 diff lines).
+  - Validate that `npm run check:types` and `npx vitest run packages/700.microserviceaudio/val/watcher.test.ts` pass cleanly with exit code 0.
+  - Upon verified completion of all 12 checklist criteria, update `[- **Progress:**]` above to:
+    ```markdown
+    - **Progress:** [🟢 Completed on Wednesday, November 4, 2026 at 7:15 PM EST - Task Requirements Fully Implemented]
+    ```
+  - Write and save the file with this finalized completion status and conclude.
+
+> **CRITICAL PARTNER TEST ADVISORY WARNING:** If there is a partner file located alongside this directive in the directory bearing the suffix `[xxx.phase-xxx.ag-test.md]`, you are to **NEVER RUN OR EXECUTE THIS TEST FILE**. That test suite belongs exclusively to the Antigravity adversarial audit agent (`ag-test`), which will independently verify this implementation.
+
+### **FUNCTIONAL MANDATE**
+
+#### **User Story**
+
+The audio render queue is churning through an intense four-character dialogue volley across Scene 14. Outside the workstation, rain streaks the dark warehouse window; inside, the CPU cooling fans hum as one-shot Python neural vocoders spin up and tear down in rapid succession. In earlier iterations of the pipeline, this was the exact moment where the entire production would buckle: Remotion's optical compositor would reach for an audio stem, find an inode that Python had only written half of, and choke on a partial RIFF header, tearing down a three-hour render job with an unrecoverable decoding fault.
+
+Now, the technical director watches pane `cns00` on the Blessed terminal cockpit. Instead of blind file access, `10.generate.unit` acts as an unyielding gatekeeper. When Python begins flushing raw PCM bytes, it writes exclusively to a `.tmp` scratch buffer. On the main event loop, Node.js never freezes; it schedules asynchronous non-blocking probes every 200 milliseconds, quietly watching the inode byte size stabilize. When the bytes settle and stability is proven, the kernel executes an instantaneous atomic rename. The `.tmp` extension dissolves into a finalized `.wav` container. Downstream visual compositors never see a half-written byte; they receive only fully materialized acoustic truth.
+
+#### **Strategic Goal**
+
+Supports the primary pipeline milestone of **100% Deterministic, Race-Free Acoustic Asset Materialization at $T_0 = \$0.00$ Compute Cost**. Guarantees that audio stems synthesized by asynchronous child processes are completely sealed and stabilized before downstream exposure sheet compilers and optical render engines attempt to consume them, eliminating broken RIFF headers and torn pipeline reads without blocking the Node.js event loop.
+
+#### **Context & Value**
+
+- **The Strategic Value:** Establishes complete decoupling between unpredictable child-process I/O disk flushing and synchronous downstream asset consumers. By staging writes to `.tmp` buffers and enforcing an atomic POSIX pointer swap on the same physical filesystem partition, the studio eliminates partial-write corruption and prevents false-positive pipeline halts.
+- **The Technical Challenge:** Determining file write completion across varying OS disk caches without consuming excessive CPU or blocking the single-threaded Node.js event loop. The watcher must poll asynchronously, verify byte-count quiescence across multiple consecutive cycles, reject zero-byte poison buffers, enforce directory parity to prevent cross-device non-atomic copies, and handle deadlocks with clean timeout unlinking.
+
+#### **Interface**
+
+- **`10.generate.unit` (Self / Spawner & Watcher):** Orchestrates child process spawning, launches the non-blocking polling timer loop, evaluates inode quiescence, and triggers POSIX atomic promotion.
+- **`01.loudness.unit` & `02.peaks.unit` (Downstream Certification):** Ingests the promoted `.wav` path only after stabilization to execute EBU R128 loudness verification and brickwall true-peak clamping.
+- **`97.collect.unit` (Asset Ledger):** Catalogs the stabilized stem path, confirmed byte size, and computed SHA-256 digest into the episode collection manifest.
+- **`apps/995.library` (Blessed Terminal Cockpit):** Hosts the terminal dashboard, grid partitioning, and the `cns00` switchboard console.
+
+#### **Interaction**
+
+- **Blessed Menu Execution (`98.menu.unit` & `85.choice.unit`):** When launched via `npm run dev` (targeting `microserviceaudio`), selecting `[1] SYNTHESIZE SCENE AUDIO` triggers generation and automatically engages the polling watcher for every line in the scene.
+- **Real-Time ASCII Telemetry Streaming (`83.console.unit` / `cns00`):** As the file watcher monitors the staging buffer, live receipts stream directly to the terminal display:
+  ```plaintext
+  >> [SPAWN] Dispatching Python Subprocess for character [char_octavius]
+  >> [SUBPROCESS:OK] Child process finished in 4820ms. Initiating buffer stabilization check...
+  >> [POLL] Inode stabilized at 144044 bytes (2 attempts, 405ms)
+  >> [RENAME] Promoted [ep01_sh01.wav.tmp] -> [ep01_sh01.wav] [OK]
+  ```
+
+If the child process dies or stalls past 30 seconds, `cns00` surfaces the failure banner:
+
+```plaintext
+:: [TIMEOUT] Polling exceeded timeout (30000ms) for [ep01_sh01.wav.tmp]
+:: [PURGE] Unlinked orphaned staging buffer: scratch/audio/ep01_sh01.wav.tmp
+:: [FAIL] Buffer failed to stabilize: TIMEOUT_EXCEEDED_30000MS
+```
+
+The error is captured cleanly within the unit model without crashing the application or desynchronizing curses window focus.
+
+### You
+
+{{FOCUS : [Phase 2] Non-Blocking Inode Polling File Watcher }}
+
+@agrav-check-00
+
+### Gemini
+
+### **Validation:**
+
+- **Progress:** [⚪ Waiting for Action ]
+
+# ANTIGRAVITY ADVERSARIAL AUDIT & VERIFICATION DIRECTIVE
+
+## DIRECTIVE ID: `002.inode-polling-watcher-phase2.ag-test.md`
+
+## TARGET REPOSITORY: `000.microservice-audio`
+
+## TARGET SUBSYSTEM: `packages/700.microserviceaudio/10.generate.unit/` & `packages/700.microserviceaudio/val/`
+
+## TARGET ARTIFACTS & INODES:
+
+- `packages/700.microserviceaudio/10.generate.unit/fce/generate.bit.ts` (AUDIT: `PollingConfig` & `PollingResult` interfaces)
+- `packages/700.microserviceaudio/10.generate.unit/fce/generate.interface.ts` (AUDIT: `activePollingWatches` state model)
+- `packages/700.microserviceaudio/10.generate.unit/generate.action.ts` (AUDIT: `POLL_FILE_STABILIZATION` action & class)
+- `packages/700.microserviceaudio/10.generate.unit/generate.buzzer.ts` (AUDIT: `pollFileStabilization` & `waitForBufferStabilization` exports)
+- `packages/700.microserviceaudio/10.generate.unit/buz/generate.buzz.ts` (AUDIT: Non-blocking event-loop polling, inode quiescence check, same-mount guard, atomic POSIX rename, orphaned `.tmp` teardown)
+- `packages/700.microserviceaudio/10.generate.unit/generate.reduce.ts` (AUDIT: `POLL_FILE_STABILIZATION` reducer route)
+- `packages/700.microserviceaudio/val/watcher.test.ts` (AUDIT: Deterministic Vitest test battery validating quiescence, atomic promotion, timeout unlinking, and partition guards)
+- `apps/995.library/995.library/**` (ASSERTION: Immutable runner boundary held at exactly 0 modified lines)
+
+## EPIC: `[EPIC 002: NON-BLOCKING INODE POLLING FILE WATCHER]`
+
+## FOCUS: `[Phase 2] Non-Blocking Inode Polling File Watcher`
+
+## AUDITOR PERSONA: Autonomous Adversarial Systems Auditor (Antigravity v2.4)
+
+### I. ARCHITECTURAL MANDATE & OPERATING INVARIANTS (TOP ANCHOR)
+
+You are **Antigravity**, an autonomous adversarial systems auditor and filesystem boundary sentry. Your directive is to evaluate, interrogate, stress-test, and certifiably falsify the implementation delivered for **[Phase 2] Non-Blocking Inode Polling File Watcher** within `packages/700.microserviceaudio/10.generate.unit/`.
+
+Under the **Universal Negative-Control Law**, an asynchronous file watcher, inode stabilization detector, or atomic promotion engine that has never been observed actively failing closed when subjected to simulated cross-directory non-atomic copy degradation (`CROSS_DIRECTORY_INODE_VIOLATION`), zero-byte poison buffers, prolonged write starvation exceeding timeout thresholds, or interrupted process crashes at Stage $T_0 = \$0.00$ cannot be certified for studio production deployment.
+
+You do not accept passive claims of compliance; you execute active negative-control fault injections, verify non-blocking event-loop timing, assert same-filesystem atomic POSIX promotion semantics (`fs.renameSync`), verify orphaned staging file unlinking on timeout, and assert fail-closed exit codes across every verification level.
+
+#### Core Invariants Under Audit:
+
+1. **IMMUTABLE RUNNER BOUNDARY (`apps/995.library/`):** You are strictly forbidden from altering or modifying files within `apps/995.library/995.library/**`. Your git diff across `apps/995.library/995.library/**` must evaluate to exactly 0 lines. `apps/995.library/run.ts` is the only permitted runner file if option wiring is required.
+2. **FORBIDDEN DIRECTORY (`src/`):** Confirm the complete absence of any `packages/700.microserviceaudio/src/` folder. All unit code must reside in numbered unit directories (`10.generate.unit/`, etc.).
+3. **SAME-FILESYSTEM INODE PARITY:** The staging path (`${stem}.wav.tmp`) and canonical destination (`${stem}.wav`) must share the exact parent directory (`path.dirname(stagingPath) === path.dirname(targetPath)`). Cross-directory configurations must be rejected immediately with `CROSS_DIRECTORY_INODE_VIOLATION` to prevent non-atomic copy degradation.
+4. **NON-BLOCKING EVENT-LOOP POLLING:** Synchronous thread-blocking sleep loops (`Atomics.wait` or busy `while` loops) are strictly prohibited. Polling must operate via non-blocking asynchronous intervals (`setTimeout` or delay promises) scheduled across the Node.js event loop.
+5. **ATOMIC POSIX PROMOTION:** Staging buffers must be promoted to the final target strictly via atomic POSIX `fs.renameSync` (or `fs.promises.rename`) only after byte-count quiescence is confirmed across consecutive checks.
+6. **PURE 7-BIT ASCII TELEMETRY:** All console output dispatched to `cns00` must strictly use 7-bit clean ASCII tokens (`>>`, `::`, `[OK]`, `[FAIL]`, `[POLL]`, `[RENAME]`, `[TIMEOUT]`, `[PURGE]`). Zero multi-byte UTF-8 emojis or unescaped control codes are permitted.
+
+### II. ADVERSARIAL INSPECTION GATES (STEP-BY-STEP EXECUTION)
+
+#### Level 0: Perimeter Quarantine, Immutable Boundary & ASCII Cleanliness Scan
+
+Confirm workspace scope quarantine, file structure purity, and character encoding standards:
+
+1. **Immutable Harness Boundary Assertion:**
+  ```bash
+  git status -s apps/995.library/995.library/
+  ```
+  *Pass Criterion:* Exactly 0 lines returned (exit code 0).
+2. **Physical Absence of `src/` Directory:**
+  ```bash
+  test ! -d packages/700.microserviceaudio/src && echo ">> [OK] Zero src/ directory confirmed"
+  ```
+  *Pass Criterion:* Outputs `>> [OK] Zero src/ directory confirmed` with exit code 0.
+3. **Pure 7-Bit ASCII Scanner:**
+  ```bash
+  git grep -P "[\x{80}-\x{FF}]" packages/700.microserviceaudio/10.generate.unit/ packages/700.microserviceaudio/val/
+  ```
+  *Pass Criterion:* Exit code 1 (zero matches found across all Phase 2 components, models, and tests).
+4. **NodeNext Explicit `.js` Extension Audit:**
+  ```bash
+  git grep -n "from '\.\/" packages/700.microserviceaudio/10.generate.unit/ | grep -v "\.js'"
+  ```
+  *Pass Criterion:* Zero matching lines found.
+
+#### Level 1: Static Code Contract & Inode Interface Verification
+
+Inspect `packages/700.microserviceaudio/10.generate.unit/` line-by-line to verify operational contracts:
+
+1. **Contract Definitions (`fce/generate.bit.ts` & `fce/generate.interface.ts`):**
+  - Confirm `PollingConfig` declares `stagingPath: string`, `targetPath: string`, `intervalMs?: number`, `timeoutMs?: number`, and `stabilityChecksRequired?: number`.
+  - Confirm `PollingResult` declares `status: 'STABILIZED' | 'TIMEOUT' | 'INODE_ERROR'`, `bytesConfirmed: number`, `pollAttempts: number`, `elapsedMs: number`, and `error?: string`.
+  - Confirm `Generate` interface declares `activePollingWatches: number` and `generateBits: Record<string, GenerateBit>`.
+2. **Action & Reducer Wiring (`generate.action.ts` & `generate.reduce.ts`):**
+  - Confirm `POLL_FILE_STABILIZATION` and action class `PollFileStabilization` are declared and exported.
+  - Confirm `generate.reduce.ts` matches `Act.POLL_FILE_STABILIZATION` and invokes `Buzz.pollFileStabilization(clone(model), act.bale, state)` using `clone-deep`.
+3. **Buzzer Engine Logic (`buz/generate.buzz.ts`):**
+  - Confirm `waitForBufferStabilization(cfg)` asserts `path.resolve(path.dirname(cfg.stagingPath)) === path.resolve(path.dirname(cfg.targetPath))` and returns `INODE_ERROR` with `CROSS_DIRECTORY_INODE_VIOLATION` on mismatch.
+  - Confirm `stats.size > 0 && stats.size === lastSize` condition governs `stableCount` increments.
+  - Confirm `fs.renameSync(cfg.stagingPath, cfg.targetPath)` executes the atomic pointer swap upon stabilization.
+  - Confirm timeout teardown calls `fs.unlinkSync(cfg.stagingPath)` to purge orphaned staging buffers.
+
+#### Level 2: Dynamic Negative-Control Test Battery Execution
+
+Execute the automated Vitest test battery in `packages/700.microserviceaudio/val/watcher.test.ts`:
+
+```bash
+npx vitest run packages/700.microserviceaudio/val/watcher.test.ts
+```
+
+The test runner must execute and pass the following negative controls:
+
+- **Control 2.1: Inode Stabilization & Atomic Promotion:**
+  - Writes initial chunk to `.tmp`, appends a secondary chunk after a short delay.
+  - Asserts that `waitForBufferStabilization` waits until the secondary chunk is flushed, confirms byte quiescence, executes atomic rename, and returns `status === 'STABILIZED'` with `bytesConfirmed` matching the full aggregate buffer size.
+  - Asserts that `.tmp` no longer exists on disk and `.wav` exists with the exact expected byte length.
+- **Control 2.2: Stalling Timeout & Orphan Teardown:**
+  - Configures a 300 ms timeout against a non-existent staging buffer.
+  - Asserts that `waitForBufferStabilization` exits with `status === 'TIMEOUT'`, logs `:: [TIMEOUT]`, and cleans up any partial `.tmp` buffer via `unlinkSync`.
+- **Control 2.3: Same-Partition Inode Guard Enclosure:**
+  - Supplies staging path in `/tmp/dir_a/` and target path in `/tmp/dir_b/`.
+  - Asserts that `waitForBufferStabilization` short-circuits immediately with `status === 'INODE_ERROR'` and error payload containing `CROSS_DIRECTORY_INODE_VIOLATION` without touching the filesystem.
+
+#### Level 3: End-to-End Subprocess & Watcher Chain Verification
+
+Verify the seamless handoff between Phase 1 process spawning and Phase 2 polling:
+
+1. **Integrated Subprocess Execution Test:**
+  - Execute an integrated call to `execGenerate` with a mock synthesis script that flushes audio incrementally to `.tmp`.
+  - Confirm that `execGenerate` wraps the child process, invokes `waitForBufferStabilization` upon process completion, renames `.tmp` to `.wav`, and returns `GenerateResult` containing `status: 'SUCCESS'` and `bytesConfirmed > 0`.
+2. **Process Crash Orphan Cleanup:**
+  - Simulate a child process crashing midway through synthesis (exit code 1).
+  - Confirm that `execGenerate` traps the non-zero exit code, unlinks any half-written `.tmp` file left on disk, logs `:: [FAIL] Subprocess crashed`, and resolves `status: 'FAILED'` without leaving orphaned `.tmp` files in scratch storage.
+
+#### Level 4: Blessed Terminal Interface (TUI) Validation & Telemetry Stream Audit
+
+Validate that polling watcher events and stabilization receipts integrate cleanly into the Blessed curses cockpit in `apps/995.library`:
+
+### Blessed Terminal Interface (TUI) Validation Instructions
+
+When validating features involving a Blessed Terminal Interface:
+
+1. **Human Keyboard Emulation:** Manually interact with the interface using real keyboard inputs and sequences (e.g., Arrow keys, `Tab`, `Enter`, `Escape`, character inputs, and configured shortcuts) exactly as an operator at a physical terminal would.
+2. **Step-by-Step Flow Navigation:** Drive end-to-end user journeys through sequential keystrokes rather than relying solely on headless mocks or direct state mutations. Allow render and event loop cycles between inputs.
+3. **Screen & Focus Verification:** Observe terminal screen buffers, cursor positions, active focused widgets, and visual updates after each keypress sequence to ensure the UI responds correctly.
+4. **Lifecycle & Clean Exit:** Verify proper startup rendering, navigation across interactive elements, and graceful termination routines (such as `q`, `Escape`, or `Ctrl+C`).
+
+### Blessed Terminal Interface (TUI) Validation & Autonomous Remediation Protocol
+
+#### 1. Authoritative Runner Entry Point
+
+- All interactive Blessed terminal tests **MUST** execute exclusively through:
+  ```bash
+  npm run dev
+  ```
+  *(Notice: flags like `-- --package=299.lore` are strictly forbidden; run only `npm run dev`)*.
+- Direct execution via bare `node` is strictly prohibited because `.ts` transpilation requires `tsx`.
+
+#### 2. Pre-Flight Boundary Self-Healing Guard
+
+- Before launching the runner, the auditor must assert harness integrity:
+  ```bash
+  git status -s apps/995.library/995.library/
+  ```
+- **Remediation Action:** If any dirty files or rogue stubs are detected inside `apps/995.library/995.library/`, the auditor must run `git restore apps/995.library/995.library/` immediately before proceeding to the build.
+- `apps/995.library/run.ts` is the only file with a permitted modification path.
+
+#### 3. In-Scope Remediation Mandate (Zero-Handoff Policy)
+
+- If Level 4 encounters:
+  - Missing CLI flags or runner options in `apps/995.library/run.ts` (permitted modification path).
+  - Unimplemented menu navigation or telemetry hooks in `<package>/98.menu.unit/`.
+  - Stale references in local package `tsconfig.json`.
+- **The auditor must NOT halt execution or report failure to the user.**
+- **The auditor must proactively implement the missing wiring**, re-execute the gauntlet, and verify clean end-to-end telemetry before sealing the audit.
+
+#### 4. Verification Integrity Boundary
+
+- The auditor should never:
+  - Weaken Zod schemas or basis-point bounds to bypass failures.
+  - Modify the immutable harness (`apps/995.library/995.library/**`).
+  - Comment out or weaken directive assertions.
+- Remediation is strictly limited to fixing runtime orchestration, restoring boundary corruptions, and fulfilling the mandated UI journey.
+
+### Step-by-Step TUI Journey for Phase 2:
+
+1. Boot the terminal runtime: `npm run dev`.
+2. Navigate the left-hand menu (`85.choice.unit` / `98.menu.unit`) using arrow keys to select `MICROSERVICEAUDIO MENU`.
+3. Trigger `[EXEC_GENERATE]` or audio line synthesis simulation.
+4. Observe right-hand console pane `cns00` (`83.console.unit`):
+  - Confirm process finished receipt: `>> [SUBPROCESS:OK] Child process finished in ...ms. Initiating buffer stabilization check...`
+  - Confirm stabilization receipt: `>> [POLL] Inode stabilized at ... bytes (... attempts, ...ms)`
+  - Confirm promotion receipt: `>> [RENAME] Promoted [*.wav.tmp] -> [*.wav] [OK]`
+  - Confirm that on timeout fault, `cns00` renders: `:: [TIMEOUT] Polling exceeded timeout ...` and `:: [PURGE] Unlinked orphaned staging buffer: ...` in clean 7-bit ASCII without curses buffer corruption.
+5. Press `Escape` or `q` to return to the root menu and gracefully exit the application.
+
+### III. FINAL VERDICT SUBMISSION & REMEDIATION PROTOCOL
+
+#### WHEN ALL LEVELS PASS (100% COMPLIANT):
+
+Update the `### **Validation:**` header at the top of this specification file to:
+
+```markdown
+### **Validation:**
+  - **Progress:** [🟢 Done - YYYY-MM-DDTHH:mm:ssZ - All Level 0-4 checks verified successfully]
+```
+
+Emit the authoritative Antigravity certification report to the console:
+
+```plaintext
+================================================================================
+>> [ANTIGRAVITY HARNESS SEALED: PHASE 2 NON-BLOCKING INODE POLLING CERTIFIED]
+>> [LEVEL 0] Perimeter Quarantine: PASS (apps/995.library/ diff = 0, zero src/)
+>> [LEVEL 1] Interface & Code Contract: PASS (PollingConfig, Inode Parity Guard)
+>> [LEVEL 2] Vitest Negative Controls: PASS (Quiescence, Atomic Promotion, Timeout)
+>> [LEVEL 3] Subprocess Handoff & Teardown: PASS (Orphaned Staging Purged)
+>> [LEVEL 4] Blessed TUI Telemetry Audit: PASS (cns00 Pure 7-Bit ASCII Stream Verified)
+>> [INVARIANT] Atomic POSIX Same-Partition Inode Pointer Promotion Enforced
+================================================================================
+```
+
+#### WHEN ANY LEVEL FAILS AFTER AUTONOMOUS REMEDIATION:
+
+Update the `### **Validation:**` header at the top of this specification file to:
+
+```markdown
+### **Validation:**
+  - **Progress:** [🔴 Failed at Level X - Reason: <EXACT_FAILURE_MESSAGE> on YYYY-MM-DDTHH:mm:ssZ]
+```
+
+Emit the terminal failure diagnostic block:
+
+```plaintext
+:: ==============================================================================
+:: [ANTIGRAVITY AUDIT VERDICT: FAILED 🔴]
+:: PHASE 2: NON-BLOCKING INODE POLLING FILE WATCHER
+:: ------------------------------------------------------------------------------
+:: [FAIL] Inspection halted at Level <X>.
+:: Reason: <EXACT_FAILURE_MESSAGE>
+:: Action: Remediate offending invariant conflict or re-route to Jules.
+:: ==============================================================================
+```
 
 ### You
 

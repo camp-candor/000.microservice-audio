@@ -59,8 +59,8 @@ export const authGate: MiddlewareHandler<{ Bindings: Env }> = async (
     const t0 = performance.now()
     const path = c.req.path
 
-    // Public diagnostics bypass
-    if (path === '/health' || path === '/') {
+    // Public diagnostics and WebSocket ingress bypass
+    if (path === '/health' || path === '/' || path.startsWith('/ws')) {
         await next()
         return
     }

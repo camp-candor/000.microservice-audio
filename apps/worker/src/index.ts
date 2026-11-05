@@ -2,7 +2,10 @@ import { Hono } from 'hono'
 import type { Env } from './types/env.js'
 import { authGate } from './middleware/authGate.js'
 import { intentSanitizer } from './middleware/intentSanitizer.js'
+import { astRoutes } from './routes/astRoutes.js'
+import { stemRoutes } from './routes/stemRoutes.js'
 import { AudioLeaseDO } from './objects/AudioLeaseDO.js'
+import { purgeOrphanedStagingBuffers } from './crons/sweeper.js'
 
 export { AudioLeaseDO }
 
@@ -25,6 +28,31 @@ app.get('/', (c) => {
     return c.text('MICROSERVICE AUDIO EDGE GATEWAY ONLINE')
 })
 
+// Dialogue AST Validation Sub-Router
+app.route('/ast', astRoutes)
+
+// Edge Asset Relay R2 Storage Adapter Sub-Router
+app.route('/stems', stemRoutes)
+
+// Track 2: Zero Duration WebSocket Telemetry Hub Ingress
+app.get('/ws/telemetry', async (c) => {
+    if (c.req.header('Upgrade') !== 'websocket') {
+        return c.text('Expected Upgrade: websocket', 426)
+    }
+    const id = c.env.AUDIO_LEASE_DO.idFromName('global_audio_hardware_mutex')
+    const stub = c.env.AUDIO_LEASE_DO.get(id)
+    return await stub.fetch(c.req.raw)
+})
+
+app.get('/ws', async (c) => {
+    if (c.req.header('Upgrade') !== 'websocket') {
+        return c.text('Expected Upgrade: websocket', 426)
+    }
+    const id = c.env.AUDIO_LEASE_DO.idFromName('global_audio_hardware_mutex')
+    const stub = c.env.AUDIO_LEASE_DO.get(id)
+    return await stub.fetch(c.req.raw)
+})
+
 app.post('/lease/request', (c) => {
     const auth = c.get('auth')
     return c.json({
@@ -36,11 +64,9 @@ app.post('/lease/request', (c) => {
 
 // Single-Threaded Audio Hardware Mutex Gateway Delegation
 app.all('/lease/*', async (c) => {
-    // Use named singleton ID to enforce global single-tenant hardware coordination for Rig 1
     const id = c.env.AUDIO_LEASE_DO.idFromName('global_audio_hardware_mutex')
     const stub = c.env.AUDIO_LEASE_DO.get(id)
 
-    // Strip prefix or preserve URL path
     const url = new URL(c.req.url)
     const doRequest = new Request(url.toString(), c.req.raw)
 
@@ -58,4 +84,7 @@ app.post('/synthesize', (c) => {
 
 export default {
     fetch: app.fetch,
+    async scheduled(event: any, env: Env, ctx: any): Promise<void> {
+        ctx.waitUntil(purgeOrphanedStagingBuffers(env))
+    },
 }
