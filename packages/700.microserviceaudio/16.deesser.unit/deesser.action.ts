@@ -1,7 +1,5 @@
-import { Action } from '../99.core/interface/action.interface'
-import DeesserBit from './fce/deesser.bit'
-
-// Deesser actions
+import { Action } from '../99.core/interface/action.interface.js'
+import DeesserBit from './fce/deesser.bit.js'
 
 export const INIT_DEESSER = '[Deesser action] Init Deesser'
 export class InitDeesser implements Action {
@@ -15,4 +13,10 @@ export class UpdateDeesser implements Action {
     constructor(public bale: DeesserBit) {}
 }
 
-export type Actions = InitDeesser | UpdateDeesser
+export const APPLY_DYNAMIC_DEESSER = '[Deesser action] Apply Dynamic Deesser'
+export class ApplyDynamicDeesser implements Action {
+    readonly type = APPLY_DYNAMIC_DEESSER
+    constructor(public bale: DeesserBit) {}
+}
+
+export type Actions = InitDeesser | UpdateDeesser | ApplyDynamicDeesser

@@ -1,2 +1,6 @@
-export { initDeesser } from './buz/deesser.buzz'
-export { updateDeesser } from './buz/deesser.buzz'
+export {
+    initDeesser,
+    updateDeesser,
+    applyDynamicDeesser,
+    compressSibilantBand,
+} from './buz/deesser.buzz.js'

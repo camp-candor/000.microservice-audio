@@ -1,2 +1,7 @@
-export { initFilter } from './buz/filter.buzz'
-export { updateFilter } from './buz/filter.buzz'
+export {
+    initFilter,
+    updateFilter,
+    applySpectralFilter,
+    stripDcOffset,
+    applyButterworthHighPass,
+} from './buz/filter.buzz.js'

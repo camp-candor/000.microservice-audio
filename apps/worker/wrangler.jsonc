@@ -4,47 +4,58 @@
     "main": "src/index.ts",
     "compatibility_date": "2026-01-07",
     "compatibility_flags": ["nodejs_compat"],
-    "observability": {
-        "enabled": true,
-    },
-    "ai": {
-        "binding": "AI",
-    },
     "durable_objects": {
         "bindings": [
             {
-                "name": "AGENT_SESSION",
-                "class_name": "AgentSessionDO",
+                "name": "AUDIO_LEASE_DO",
+                "class_name": "AudioLeaseDO",
             },
         ],
     },
     "migrations": [
         {
             "tag": "v1",
-            "new_sqlite_classes": ["AgentSessionDO"],
+            "new_sqlite_classes": ["AudioLeaseDO"],
         },
     ],
-    "alias": {
-        "ajv": "../../node_modules/@funtuantw/pi-agent-cf/stubs/ajv.js",
+    "d1_databases": [
+        {
+            "binding": "CANON_DB",
+            "database_name": "audio-canon-db",
+            "database_id": "00000000-0000-0000-0000-000000000000",
+        },
+    ],
+    "r2_buckets": [
+        {
+            "binding": "AUDIO_STEMS_BUCKET",
+            "bucket_name": "microservice-audio-stems",
+        },
+    ],
+    "observability": {
+        "enabled": true,
     },
     "env": {
         "staging": {
-            "name": "microservice-audio-staging",
-            "ai": {
-                "binding": "AI",
-            },
+            "name": "microservice-audio-worker-staging",
             "durable_objects": {
                 "bindings": [
                     {
-                        "name": "AGENT_SESSION",
-                        "class_name": "AgentSessionDO",
+                        "name": "AUDIO_LEASE_DO",
+                        "class_name": "AudioLeaseDO",
                     },
                 ],
             },
-            "migrations": [
+            "d1_databases": [
                 {
-                    "tag": "v1",
-                    "new_sqlite_classes": ["AgentSessionDO"],
+                    "binding": "CANON_DB",
+                    "database_name": "audio-canon-db-staging",
+                    "database_id": "00000000-0000-0000-0000-000000000001",
+                },
+            ],
+            "r2_buckets": [
+                {
+                    "binding": "AUDIO_STEMS_BUCKET",
+                    "bucket_name": "microservice-audio-stems-staging",
                 },
             ],
         },

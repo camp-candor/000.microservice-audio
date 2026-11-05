@@ -1,7 +1,7 @@
-import DeesserBit from './deesser.bit'
+import type DeesserBit from './deesser.bit.js'
 
 export default interface Deesser {
-    // idx:string;
-    // deesserBitList: DeesserBit[];
-    // deesserBits:any;
+    idx: string
+    filesProcessed: number
+    deesserBits: Record<string, DeesserBit>
 }

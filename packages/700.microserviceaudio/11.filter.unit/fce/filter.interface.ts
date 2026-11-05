@@ -1,7 +1,7 @@
-import FilterBit from './filter.bit'
+import type FilterBit from './filter.bit.js'
 
 export default interface Filter {
-    // idx:string;
-    // filterBitList: FilterBit[];
-    // filterBits:any;
+    idx: string
+    filtersProcessed: number
+    filterBits: Record<string, FilterBit>
 }

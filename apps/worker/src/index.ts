@@ -1,102 +1,61 @@
 import { Hono } from 'hono'
-import { createAgentWorker } from '@funtuantw/pi-agent-cf'
-import { coreTools, type Env } from './tools.core.js'
-// import { customTools } from './tools.custom.js'
+import type { Env } from './types/env.js'
+import { authGate } from './middleware/authGate.js'
+import { intentSanitizer } from './middleware/intentSanitizer.js'
+import { AudioLeaseDO } from './objects/AudioLeaseDO.js'
 
-// ----------------------------------------------------------------------------
-// :: DETERMINISTIC LLM & DEVOPS SYSTEM PROMPT
-// ----------------------------------------------------------------------------
-
-const cfModel: any = {
-    id: '@cf/meta/llama-3.2-3b-instruct',
-    api: 'openai-completions',
-    provider: 'openai',
-    baseUrl: '',
-    reasoning: false,
-    input: ['text'],
-    temperature: 0.1,
-    compat: {
-        supportsStore: false,
-        supportsDeveloperRole: false,
-        supportsStrictMode: false,
-    },
-}
-
-const dynamicWorker = createAgentWorker<Env>({
-    systemPrompt: (env) => {
-        cfModel.baseUrl = `https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/ai/v1`
-
-        return `
-You are repo-bot, the deterministic DevOps Control Plane and Git Mechanic.
-You possess a suite of deterministic Git and CI surveillance instruments:
-1. 'get_commit_sha': Captures the immutable base rollback anchor (S_clean) before modifying branches.
-2. 'create_ephemeral_branch': Creates an isolated work branch (spec/TASK-XX-<short-sha>). Direct commits to main are forbidden.
-3. 'write_repo_file': Writes bounded UTF-8 content to an ephemeral branch.
-4. 'create_pull_request': Opens a Pull Request from an ephemeral branch to trunk for validation.
-5. 'inspect_repo_checks': Queries repository commits and evaluates check-run CI outcomes.
-
-OPERATIONAL INVARIANTS:
-- Always capture S_clean via get_commit_sha before creating branches.
-- Never modify files directly on main or production tracking branches.
-- Output deterministic, structured summaries following tool execution.
-        `.trim()
-    },
-    model: cfModel,
-    tools: (env) => [...coreTools(env)],
-    getApiKey: (provider, env) => {
-        if (provider === 'openai') return env.CLOUDFLARE_API_TOKEN
-        return undefined
-    },
-})
-
-// ----------------------------------------------------------------------------
-// :: HONO ROUTER
-// ----------------------------------------------------------------------------
+export { AudioLeaseDO }
 
 const app = new Hono<{ Bindings: Env }>()
 
-// Root Health & Verification Endpoint
-app.get('/', (c) => c.text('REPO-BOT EDGE CONTROL PLANE IS LIVE'))
+// Ingress Security Perimeter Middleware Pipeline
+app.use('*', authGate)
+app.use('*', intentSanitizer)
 
-// Structured Diagnostics Endpoint (Satisfies packages/100.agent switchboard probe)
-app.get('/health', (c) =>
-    c.json(
-        {
-            status: 'healthy',
-            service: 'microservice-audio-worker',
-            timestamp: new Date().toISOString(),
-            hasGithubToken: Boolean(c.env.GITHUB_TOKEN),
-            aiGateway: c.env.CLOUDFLARE_AI_GATEWAY || 'default',
-        },
-        200,
-    ),
-)
-
-// Fast-Path Oracle Endpoint
-app.get('/oracle', async (c) => {
-    try {
-        const prompt = c.req.query('prompt') || 'Inspect system status'
-        const response = await c.env.AI.run('@cf/meta/llama-3.2-3b-instruct', {
-            messages: [
-                { role: 'user', content: `${prompt}. Output ONLY raw JSON.` },
-            ],
-        })
-        return c.text(response.response || JSON.stringify(response))
-    } catch (error: any) {
-        console.error('Oracle Error:', error)
-        return c.text(`Error: ${error.message}`, 500)
-    }
+// Public Diagnostics
+app.get('/health', (c) => {
+    return c.json({
+        status: 'HEALTHY',
+        service: 'microservice-audio-worker',
+        timestampMs: Date.now(),
+    })
 })
 
-// Durable Object Session Ingress
-app.all('/*', async (c) => {
-    if (!dynamicWorker.handler.fetch) return c.text('Handler missing', 500)
-    return await dynamicWorker.handler.fetch(
-        c.req.raw as any,
-        c.env,
-        c.executionCtx,
-    )
+app.get('/', (c) => {
+    return c.text('MICROSERVICE AUDIO EDGE GATEWAY ONLINE')
 })
 
-export const AgentSessionDO = dynamicWorker.AgentSessionDO
-export default app
+app.post('/lease/request', (c) => {
+    const auth = c.get('auth')
+    return c.json({
+        status: 'LEASE_REQUEST_ACCEPTED',
+        authenticatedRole: auth.role,
+        timestampMs: Date.now(),
+    })
+})
+
+// Single-Threaded Audio Hardware Mutex Gateway Delegation
+app.all('/lease/*', async (c) => {
+    // Use named singleton ID to enforce global single-tenant hardware coordination for Rig 1
+    const id = c.env.AUDIO_LEASE_DO.idFromName('global_audio_hardware_mutex')
+    const stub = c.env.AUDIO_LEASE_DO.get(id)
+
+    // Strip prefix or preserve URL path
+    const url = new URL(c.req.url)
+    const doRequest = new Request(url.toString(), c.req.raw)
+
+    return await stub.fetch(doRequest)
+})
+
+app.post('/synthesize', (c) => {
+    const auth = c.get('auth')
+    return c.json({
+        status: 'SYNTHESIS_INTENT_DISPATCHED',
+        clientRole: auth.role,
+        dispatchedAtMs: Date.now(),
+    })
+})
+
+export default {
+    fetch: app.fetch,
+}
