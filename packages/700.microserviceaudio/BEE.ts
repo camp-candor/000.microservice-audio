@@ -9,6 +9,7 @@ import GenerateUnit from './10.generate.unit/generate.unit.js'
 import LoudnessUnit from './01.loudness.unit/loudness.unit.js'
 import PeaksUnit from './02.peaks.unit/peaks.unit.js'
 import TranscriptionUnit from './06.transcription.unit/transcription.unit.js'
+import SchemasUnit from './08.schemas.unit/schemas.unit.js'
 
 import Microserviceaudio from './00.microserviceaudio.unit/fce/microserviceaudio.interface'
 import { MicroserviceaudioModel } from './00.microserviceaudio.unit/microserviceaudio.model'
@@ -28,6 +29,8 @@ import Peaks from './02.peaks.unit/fce/peaks.interface.js'
 import { PeaksModel } from './02.peaks.unit/peaks.model.js'
 import Transcription from './06.transcription.unit/fce/transcription.interface.js'
 import { TranscriptionModel } from './06.transcription.unit/transcription.model.js'
+import Schemas from './08.schemas.unit/fce/schemas.interface.js'
+import { SchemasModel } from './08.schemas.unit/schemas.model.js'
 
 export const list: Array<any> = [
     MicroserviceaudioUnit,
@@ -39,6 +42,7 @@ export const list: Array<any> = [
     LoudnessUnit,
     PeaksUnit,
     TranscriptionUnit,
+    SchemasUnit,
 ]
 
 import * as reduceFromMicroserviceaudio from './00.microserviceaudio.unit/microserviceaudio.reduce'
@@ -50,6 +54,7 @@ import * as reduceFromGenerate from './10.generate.unit/generate.reduce.js'
 import * as reduceFromLoudness from './01.loudness.unit/loudness.reduce.js'
 import * as reduceFromPeaks from './02.peaks.unit/peaks.reduce.js'
 import * as reduceFromTranscription from './06.transcription.unit/transcription.reduce.js'
+import * as reduceFromSchemas from './08.schemas.unit/schemas.reduce.js'
 
 export const reducer: any = {
     microserviceaudio: reduceFromMicroserviceaudio.reducer,
@@ -61,6 +66,7 @@ export const reducer: any = {
     loudness: reduceFromLoudness.reducer,
     peaks: reduceFromPeaks.reducer,
     transcription: reduceFromTranscription.reducer,
+    schemas: reduceFromSchemas.reducer,
 }
 
 export default class UnitData implements Model {
@@ -73,4 +79,5 @@ export default class UnitData implements Model {
     loudness: Loudness = new LoudnessModel()
     peaks: Peaks = new PeaksModel()
     transcription: Transcription = new TranscriptionModel()
+    schemas: Schemas = new SchemasModel()
 }

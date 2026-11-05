@@ -7,6 +7,7 @@ import * as ActGen from '../../10.generate.unit/generate.action.js'
 import * as ActLdn from '../../01.loudness.unit/loudness.action.js'
 import * as ActPek from '../../02.peaks.unit/peaks.action.js'
 import * as ActTrn from '../../06.transcription.unit/transcription.action.js'
+import * as ActSch from '../../08.schemas.unit/schemas.action.js'
 
 import type { MenuModel } from '../menu.model.js'
 import type MenuBit from '../fce/menu.bit.js'
@@ -102,9 +103,9 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     lst = [
         ActOlm.UPDATE_MICROSERVICEAUDIO.split(']')[1],
         ActOlm.TEST_MICROSERVICEAUDIO.split(']')[1],
-        ActOlm.LIST_MICROSERVICEAUDIO.split(']')[1],
         ActGen.EXEC_GENERATE.split(']')[1],
         FAIL_GENERATE_DEMO,
+        '[SCHEMA: AUDIT INGRESS CONTRACT]',
         'ROOT MENU',
     ]
 
@@ -124,6 +125,71 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     src = bit.chcBit.src
 
     switch (src) {
+        case '[SCHEMA: AUDIT INGRESS CONTRACT]':
+        case ' [SCHEMA: AUDIT INGRESS CONTRACT]':
+        case 'SCHEMA: AUDIT INGRESS CONTRACT':
+        case ' SCHEMA: AUDIT INGRESS CONTRACT':
+        case 'AUDIT INGRESS CONTRACT':
+        case ' AUDIT INGRESS CONTRACT':
+            // 1. Valid contract audit
+            await ste.hunt(ActSch.VALIDATE_INGRESS_CONTRACT, {
+                idx: 'demo-schema-valid',
+                dat: {
+                    sceneAst: {
+                        sceneId: 'sc_14',
+                        seriesId: 'series_candor_01',
+                        state_snapshot_hash:
+                            'a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90',
+                        dialogueLines: [
+                            {
+                                lineId: 'line_01',
+                                shotIndex: 0,
+                                character: 'char_wart',
+                                text: 'Hold the gates.',
+                                emotion: 'tense',
+                                tonePacing: 1.0,
+                            },
+                        ],
+                    },
+                },
+            })
+
+            // 2. Parity audit
+            await ste.hunt(ActSch.VALIDATE_SCRIPT_PARITY, {
+                idx: 'demo-parity-valid',
+                dat: {
+                    dialogueLine: {
+                        lineId: 'line_01',
+                        character: 'char_wart',
+                        text: 'Hold the gates.',
+                    },
+                    expectedScriptText: 'Hold the gates.',
+                },
+            })
+
+            // 3. Negative control display
+            await ste.hunt(ActSch.VALIDATE_INGRESS_CONTRACT, {
+                idx: 'demo-schema-invalid',
+                dat: {
+                    sceneAst: {
+                        sceneId: 'sc_err',
+                        seriesId: 'series_candor_01',
+                        state_snapshot_hash: 'bad_snapshot_hash',
+                        dialogueLines: [
+                            {
+                                lineId: 'line_err',
+                                shotIndex: 0,
+                                character: 'char_wart',
+                                text: 'Hold the gates.',
+                            },
+                        ],
+                    },
+                },
+            })
+
+            await new Promise((resolve) => setTimeout(resolve, 3000))
+            break
+
         case ActOlm.UPDATE_MICROSERVICEAUDIO.split(']')[1]:
             bit = await ste.hunt(ActOlm.UPDATE_MICROSERVICEAUDIO, {
                 content: 'Microserviceaudio Menu Selected',
