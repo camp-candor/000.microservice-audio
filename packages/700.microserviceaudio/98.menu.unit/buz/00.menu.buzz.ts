@@ -1,7 +1,9 @@
 /* eslint-disable */
+import path from 'node:path'
 import * as ActMnu from '../menu.action.js'
 //import * as ActAgt from '../../00.agent.unit/agent.action.js';
 import * as ActOlm from '../../00.microserviceaudio.unit/microserviceaudio.action.js'
+import * as ActGen from '../../10.generate.unit/generate.action.js'
 
 import type { MenuModel } from '../menu.model.js'
 import type MenuBit from '../fce/menu.bit.js'
@@ -25,6 +27,17 @@ const UPDATE_CONSOLE = '[Console action] Update Console'
 const OPEN_CHOICE = '[Open action] Open Choice'
 const CLOSE_TERMINAL = '[Close action] Close Terminal'
 const PRINT_MENU = '[Render action] Print Menu'
+
+const FAIL_GENERATE_DEMO = ' Fail Generate Demo'
+
+const demoScriptPath = (file: string): string => {
+    const root = process.env.INIT_CWD || process.cwd()
+    return path.resolve(
+        root,
+        'packages/700.microserviceaudio/10.generate.unit/fixture',
+        file,
+    )
+}
 
 export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     if (bal.slv != null) rootSlv = bal.slv
@@ -65,6 +78,8 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
         ActOlm.UPDATE_MICROSERVICEAUDIO.split(']')[1],
         ActOlm.TEST_MICROSERVICEAUDIO.split(']')[1],
         ActOlm.LIST_MICROSERVICEAUDIO.split(']')[1],
+        ActGen.EXEC_GENERATE.split(']')[1],
+        FAIL_GENERATE_DEMO,
         'ROOT MENU',
     ]
 
@@ -120,6 +135,38 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                 )
             }
 
+            await new Promise((resolve) => setTimeout(resolve, 3000))
+            break
+
+        case ActGen.EXEC_GENERATE.split(']')[1]:
+            bit = await ste.hunt(ActGen.EXEC_GENERATE, {
+                idx: 'demo-line',
+                dat: {
+                    engine: 'styletts2',
+                    character: 'char_demo',
+                    text: 'Demo line for cockpit synthesis.',
+                    emotion: 'neutral',
+                    outputPath: 'scratch/audio/demo_line.wav.tmp',
+                    styleVectorPath: 'assets/voices/demo_style.pt',
+                    synthesizeScriptPath: demoScriptPath('synthesize.py'),
+                },
+            })
+            await new Promise((resolve) => setTimeout(resolve, 3000))
+            break
+
+        case FAIL_GENERATE_DEMO:
+            bit = await ste.hunt(ActGen.EXEC_GENERATE, {
+                idx: 'demo-fail',
+                dat: {
+                    engine: 'piper',
+                    character: 'char_demo',
+                    text: 'Demo line for failure telemetry.',
+                    outputPath: 'scratch/audio/demo_fail.wav.tmp',
+                    synthesizeScriptPath: demoScriptPath(
+                        'missing-synthesize.py',
+                    ),
+                },
+            })
             await new Promise((resolve) => setTimeout(resolve, 3000))
             break
 
