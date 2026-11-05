@@ -1,7 +1,7 @@
-import GenerateBit from './generate.bit'
+import type GenerateBit from './generate.bit.js';
 
 export default interface Generate {
-    // idx:string;
-    // generateBitList: GenerateBit[];
-    // generateBits:any;
+  idx: string;
+  activeProcessCount: number;
+  generateBits: Record<string, GenerateBit>;
 }
