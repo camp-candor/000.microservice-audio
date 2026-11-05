@@ -1,7 +1,5 @@
-import { Action } from '../99.core/interface/action.interface'
-import TranscriptionBit from './fce/transcription.bit'
-
-// Transcription actions
+import { Action } from '../99.core/interface/action.interface.js'
+import TranscriptionBit from './fce/transcription.bit.js'
 
 export const INIT_TRANSCRIPTION = '[Transcription action] Init Transcription'
 export class InitTranscription implements Action {
@@ -16,4 +14,12 @@ export class UpdateTranscription implements Action {
     constructor(public bale: TranscriptionBit) {}
 }
 
-export type Actions = InitTranscription | UpdateTranscription
+export const VERIFY_TRANSCRIPTION_PARITY =
+    '[Transcription action] Verify Transcription Parity'
+export class VerifyTranscriptionParity implements Action {
+    readonly type = VERIFY_TRANSCRIPTION_PARITY
+    constructor(public bale: TranscriptionBit) {}
+}
+
+export type Actions =
+    InitTranscription | UpdateTranscription | VerifyTranscriptionParity

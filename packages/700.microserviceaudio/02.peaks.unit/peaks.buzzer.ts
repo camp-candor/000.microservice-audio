@@ -1,2 +1,6 @@
-export { initPeaks } from './buz/peaks.buzz'
-export { updatePeaks } from './buz/peaks.buzz'
+export {
+    initPeaks,
+    updatePeaks,
+    auditPeaks,
+    scanTruePeak,
+} from './buz/peaks.buzz.js'

@@ -1,5 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { execFile } from 'node:child_process'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import {
     buildCliArgs,
     execGenerate,
@@ -67,9 +70,19 @@ describe('10.generate.unit: CLI Argument Serializer', () => {
 })
 
 describe('10.generate.unit: Failure Handling and Zero-VRAM Invariant', () => {
+    const testDirs: string[] = []
+
     beforeEach(() => {
         vi.clearAllMocks()
         delete (globalThis as any).LIBRARY
+    })
+
+    afterEach(() => {
+        for (const dir of testDirs.splice(0)) {
+            try {
+                fs.rmSync(dir, { recursive: true, force: true })
+            } catch {}
+        }
     })
 
     it('traps non-zero exit codes with FAILED status and truncated stderr', async () => {
@@ -89,6 +102,11 @@ describe('10.generate.unit: Failure Handling and Zero-VRAM Invariant', () => {
             },
         )
 
+        const testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gen-fail-'))
+        testDirs.push(testDir)
+        const stagingPath = path.join(testDir, 'probe.wav.tmp')
+        fs.writeFileSync(stagingPath, Buffer.alloc(256, 0x03))
+
         const model = new GenerateModel()
         const bal: GenerateBit = {
             idx: 'gen-fail',
@@ -96,7 +114,7 @@ describe('10.generate.unit: Failure Handling and Zero-VRAM Invariant', () => {
                 engine: 'piper',
                 character: 'char_probe',
                 text: 'Probe line.',
-                outputPath: 'scratch/audio/probe.wav.tmp',
+                outputPath: stagingPath,
             },
         }
 
@@ -107,6 +125,7 @@ describe('10.generate.unit: Failure Handling and Zero-VRAM Invariant', () => {
         expect(bal.result?.exitCode).toBe(1)
         expect(bal.result?.stderr).toContain('SyntaxError')
         expect((bal.result?.stderr || '').length).toBeLessThanOrEqual(300)
+        expect(fs.existsSync(stagingPath)).toBe(false)
         const msgs = hunt.mock.calls.map((c: any[]) => (c[1] ? c[1].src : ''))
         expect(msgs.some((m: string) => m.includes('>> [SPAWN]'))).toBe(true)
         expect(msgs.some((m: string) => m.includes(':: [FAIL]'))).toBe(true)
@@ -124,6 +143,12 @@ describe('10.generate.unit: Failure Handling and Zero-VRAM Invariant', () => {
             },
         )
 
+        const testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gen-ok-'))
+        testDirs.push(testDir)
+        const stagingPath = path.join(testDir, 'probe.wav.tmp')
+        const targetPath = path.join(testDir, 'probe.wav')
+        fs.writeFileSync(stagingPath, Buffer.alloc(2048, 0x04))
+
         const model = new GenerateModel()
         const bal: GenerateBit = {
             idx: 'gen-ok',
@@ -131,7 +156,14 @@ describe('10.generate.unit: Failure Handling and Zero-VRAM Invariant', () => {
                 engine: 'styletts2',
                 character: 'char_probe',
                 text: 'Probe line.',
-                outputPath: 'scratch/audio/probe.wav.tmp',
+                outputPath: stagingPath,
+                polling: {
+                    stagingPath,
+                    targetPath,
+                    intervalMs: 20,
+                    timeoutMs: 5000,
+                    stabilityChecksRequired: 2,
+                },
             },
         }
 
@@ -140,6 +172,10 @@ describe('10.generate.unit: Failure Handling and Zero-VRAM Invariant', () => {
         expect(out.activeProcessCount).toBe(0)
         expect(bal.result?.status).toBe('SUCCESS')
         expect(bal.result?.exitCode).toBe(0)
+        expect(bal.result?.bytesConfirmed).toBe(2048)
+        expect(fs.existsSync(stagingPath)).toBe(false)
+        expect(fs.existsSync(targetPath)).toBe(true)
+        expect(fs.statSync(targetPath).size).toBe(2048)
         const opts = mocked.mock.calls[0][2]
         expect(opts.env.CUDA_VISIBLE_DEVICES).toBe('')
         expect(opts.env.OMP_NUM_THREADS).toBe('4')
@@ -148,6 +184,10 @@ describe('10.generate.unit: Failure Handling and Zero-VRAM Invariant', () => {
         expect(cliArgs).toContain('--engine')
         expect(cliArgs).toContain('styletts2')
         const msgs = hunt.mock.calls.map((c: any[]) => (c[1] ? c[1].src : ''))
-        expect(msgs.some((m: string) => m.includes('>> [OK]'))).toBe(true)
+        expect(msgs.some((m: string) => m.includes('>> [SUBPROCESS:OK]'))).toBe(
+            true,
+        )
+        expect(msgs.some((m: string) => m.includes('>> [POLL]'))).toBe(true)
+        expect(msgs.some((m: string) => m.includes('>> [RENAME]'))).toBe(true)
     })
 })

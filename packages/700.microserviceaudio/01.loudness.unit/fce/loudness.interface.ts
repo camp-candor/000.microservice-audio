@@ -1,7 +1,7 @@
-import LoudnessBit from './loudness.bit'
+import type LoudnessBit from './loudness.bit.js'
 
 export default interface Loudness {
-    // idx:string;
-    // loudnessBitList: LoudnessBit[];
-    // loudnessBits:any;
+    idx: string
+    auditsCompleted: number
+    loudnessBits: Record<string, LoudnessBit>
 }

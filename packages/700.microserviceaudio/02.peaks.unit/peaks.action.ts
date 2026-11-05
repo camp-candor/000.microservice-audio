@@ -1,7 +1,5 @@
-import { Action } from '../99.core/interface/action.interface'
-import PeaksBit from './fce/peaks.bit'
-
-// Peaks actions
+import { Action } from '../99.core/interface/action.interface.js'
+import PeaksBit from './fce/peaks.bit.js'
 
 export const INIT_PEAKS = '[Peaks action] Init Peaks'
 export class InitPeaks implements Action {
@@ -15,4 +13,10 @@ export class UpdatePeaks implements Action {
     constructor(public bale: PeaksBit) {}
 }
 
-export type Actions = InitPeaks | UpdatePeaks
+export const AUDIT_PEAKS = '[Peaks action] Audit Peaks'
+export class AuditPeaks implements Action {
+    readonly type = AUDIT_PEAKS
+    constructor(public bale: PeaksBit) {}
+}
+
+export type Actions = InitPeaks | UpdatePeaks | AuditPeaks

@@ -1,7 +1,7 @@
-import PeaksBit from './peaks.bit'
+import type PeaksBit from './peaks.bit.js'
 
 export default interface Peaks {
-    // idx:string;
-    // peaksBitList: PeaksBit[];
-    // peaksBits:any;
+    idx: string
+    scansCompleted: number
+    peaksBits: Record<string, PeaksBit>
 }

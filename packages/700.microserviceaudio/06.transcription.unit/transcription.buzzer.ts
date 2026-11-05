@@ -1,2 +1,6 @@
-export { initTranscription } from './buz/transcription.buzz'
-export { updateTranscription } from './buz/transcription.buzz'
+export {
+    initTranscription,
+    updateTranscription,
+    verifyTranscriptionParity,
+    validateWaveHeaderSentinel,
+} from './buz/transcription.buzz.js'

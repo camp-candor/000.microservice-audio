@@ -1,2 +1,6 @@
-export { initLoudness } from './buz/loudness.buzz'
-export { updateLoudness } from './buz/loudness.buzz'
+export {
+    initLoudness,
+    updateLoudness,
+    auditLoudness,
+    measureIntegratedLufs,
+} from './buz/loudness.buzz.js'

@@ -4,6 +4,9 @@ import * as ActMnu from '../menu.action.js'
 //import * as ActAgt from '../../00.agent.unit/agent.action.js';
 import * as ActOlm from '../../00.microserviceaudio.unit/microserviceaudio.action.js'
 import * as ActGen from '../../10.generate.unit/generate.action.js'
+import * as ActLdn from '../../01.loudness.unit/loudness.action.js'
+import * as ActPek from '../../02.peaks.unit/peaks.action.js'
+import * as ActTrn from '../../06.transcription.unit/transcription.action.js'
 
 import type { MenuModel } from '../menu.model.js'
 import type MenuBit from '../fce/menu.bit.js'
@@ -37,6 +40,28 @@ const demoScriptPath = (file: string): string => {
         'packages/700.microserviceaudio/10.generate.unit/fixture',
         file,
     )
+}
+
+const auditStem = async (
+    ste: State,
+    stemPath: string,
+    expectedText: string,
+): Promise<void> => {
+    await ste.hunt(ActTrn.VERIFY_TRANSCRIPTION_PARITY, {
+        idx: 'demo-parity',
+        dat: { filePath: stemPath, expectedText },
+    })
+    await ste.hunt(ActLdn.AUDIT_LOUDNESS, {
+        idx: 'demo-loudness',
+        dat: {
+            filePath: stemPath,
+            profile: { targetLufs: -16.0, toleranceLufs: 1.0 },
+        },
+    })
+    await ste.hunt(ActPek.AUDIT_PEAKS, {
+        idx: 'demo-peaks',
+        dat: { filePath: stemPath, maxTruePeakDbTp: -1.0 },
+    })
 }
 
 export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
@@ -151,6 +176,16 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                     synthesizeScriptPath: demoScriptPath('synthesize.py'),
                 },
             })
+            if (
+                bit?.genBit?.result?.status === 'SUCCESS' &&
+                bit.genBit.result.outputPath
+            ) {
+                await auditStem(
+                    ste,
+                    bit.genBit.result.outputPath,
+                    'Demo line for cockpit synthesis.',
+                )
+            }
             await new Promise((resolve) => setTimeout(resolve, 3000))
             break
 
@@ -162,11 +197,36 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                     character: 'char_demo',
                     text: 'Demo line for failure telemetry.',
                     outputPath: 'scratch/audio/demo_fail.wav.tmp',
-                    synthesizeScriptPath: demoScriptPath(
-                        'missing-synthesize.py',
-                    ),
+                    synthesizeScriptPath: demoScriptPath('synthesize_empty.py'),
+                    polling: {
+                        stagingPath: 'scratch/audio/demo_fail.wav.tmp',
+                        targetPath: 'scratch/audio/demo_fail.wav',
+                        intervalMs: 100,
+                        timeoutMs: 2000,
+                        stabilityChecksRequired: 2,
+                    },
                 },
             })
+            bit = await ste.hunt(ActGen.EXEC_GENERATE, {
+                idx: 'demo-hot',
+                dat: {
+                    engine: 'piper',
+                    character: 'char_demo',
+                    text: 'Demo line for breach telemetry.',
+                    outputPath: 'scratch/audio/demo_hot.wav.tmp',
+                    synthesizeScriptPath: demoScriptPath('synthesize_loud.py'),
+                },
+            })
+            if (
+                bit?.genBit?.result?.status === 'SUCCESS' &&
+                bit.genBit.result.outputPath
+            ) {
+                await auditStem(
+                    ste,
+                    bit.genBit.result.outputPath,
+                    'Demo line for breach telemetry.',
+                )
+            }
             await new Promise((resolve) => setTimeout(resolve, 3000))
             break
 

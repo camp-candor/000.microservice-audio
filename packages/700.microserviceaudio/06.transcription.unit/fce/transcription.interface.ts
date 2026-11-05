@@ -1,7 +1,7 @@
-import TranscriptionBit from './transcription.bit'
+import type TranscriptionBit from './transcription.bit.js'
 
 export default interface Transcription {
-    // idx:string;
-    // transcriptionBitList: TranscriptionBit[];
-    // transcriptionBits:any;
+    idx: string
+    validationsCompleted: number
+    transcriptionBits: Record<string, TranscriptionBit>
 }
