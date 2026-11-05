@@ -1,18 +1,22 @@
-import { Action } from '../99.core/interface/action.interface'
-import GenerateBit from './fce/generate.bit'
+import { Action } from '../99.core/interface/action.interface.js';
+import GenerateBit from './fce/generate.bit.js';
 
-// Generate actions
-
-export const INIT_GENERATE = '[Generate action] Init Generate'
+export const INIT_GENERATE = '[Generate action] Init Generate';
 export class InitGenerate implements Action {
-    readonly type = INIT_GENERATE
-    constructor(public bale: GenerateBit) {}
+  readonly type = INIT_GENERATE;
+  constructor(public bale: GenerateBit) {}
 }
 
-export const UPDATE_GENERATE = '[Generate action] Update Generate'
+export const UPDATE_GENERATE = '[Generate action] Update Generate';
 export class UpdateGenerate implements Action {
-    readonly type = UPDATE_GENERATE
-    constructor(public bale: GenerateBit) {}
+  readonly type = UPDATE_GENERATE;
+  constructor(public bale: GenerateBit) {}
 }
 
-export type Actions = InitGenerate | UpdateGenerate
+export const EXEC_GENERATE = '[Generate action] Exec Generate';
+export class ExecGenerate implements Action {
+  readonly type = EXEC_GENERATE;
+  constructor(public bale: GenerateBit) {}
+}
+
+export type Actions = InitGenerate | UpdateGenerate | ExecGenerate;
