@@ -16,6 +16,8 @@ export function reducer(
       return Buzz.updateGenerate(clone(model), act.bale, state!);
     case Act.EXEC_GENERATE:
       return Buzz.execGenerate(clone(model), act.bale, state!);
+    case Act.POLL_FILE_STABILIZATION:
+      return Buzz.pollFileStabilization(clone(model), act.bale, state!);
     default:
       return model;
   }
