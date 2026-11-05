@@ -19,4 +19,10 @@ export class ExecGenerate implements Action {
   constructor(public bale: GenerateBit) {}
 }
 
-export type Actions = InitGenerate | UpdateGenerate | ExecGenerate;
+export const POLL_FILE_STABILIZATION = '[Generate action] Poll File Stabilization';
+export class PollFileStabilization implements Action {
+  readonly type = POLL_FILE_STABILIZATION;
+  constructor(public bale: GenerateBit) {}
+}
+
+export type Actions = InitGenerate | UpdateGenerate | ExecGenerate | PollFileStabilization;
