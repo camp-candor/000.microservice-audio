@@ -4,7 +4,7 @@ import fs from 'node:fs'
 import crypto from 'node:crypto'
 import * as ActMnu from '../menu.action.js'
 //import * as ActAgt from '../../00.agent.unit/agent.action.js';
-import * as ActCns from '../../act/console.action.js';
+import * as ActCns from '../../act/console.action.js'
 import * as ActOlm from '../../00.microserviceaudio.unit/microserviceaudio.action.js'
 import * as ActGen from '../../10.generate.unit/generate.action.js'
 import * as ActLdn from '../../01.loudness.unit/loudness.action.js'
@@ -21,7 +21,6 @@ import type State from '../../99.core/state.js'
 import * as Grid from '../../val/grid.js'
 import * as Align from '../../val/align.js'
 import * as Color from '../../val/console-color.js'
-
 
 import * as FOCUS from '../../val/focus.js'
 
@@ -1546,13 +1545,15 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
             const isComplete = totalUnits === 22 && mountedKeys.length === 22 // 21 domain units + 00 root
 
             if (ste) {
-                await ste.hunt(ActCns.UPDATE_CONSOLE, {
+                await global.LIBRARY.hunt(UPDATE_CONSOLE, {
                     idx: 'cns00',
                     src: `>> [BEE:AUDIT] Units in list: ${totalUnits} | Mounted Reducers: ${mountedKeys.length}`,
                 })
-                await ste.hunt(ActCns.UPDATE_CONSOLE, {
+                await global.LIBRARY.hunt(UPDATE_CONSOLE, {
                     idx: 'cns00',
-                    src: isComplete ? '>> [BEE:OK] All 21 domain units verified in state machine.' : ':: [BEE:FAIL] Unit mismatch detected.',
+                    src: isComplete
+                        ? '>> [BEE:OK] All 21 domain units verified in state machine.'
+                        : ':: [BEE:FAIL] Unit mismatch detected.',
                 })
             }
             break
