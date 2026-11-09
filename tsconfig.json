@@ -16,7 +16,6 @@
         "skipLibCheck": true,
         "baseUrl": ".",
         "paths": {
-            "@camp_candor/100.agent": ["./packages/100.agent/BEE.ts"],
             "@camp_candor/700.microserviceaudio": [
                 "./packages/700.microserviceaudio/BEE.ts"
             ]
@@ -25,7 +24,6 @@
     "files": [],
     "exclude": ["node_modules", "dist"],
     "references": [
-        { "path": "./packages/100.agent" },
         { "path": "./packages/700.microserviceaudio" },
         { "path": "./apps/worker" }
     ]
