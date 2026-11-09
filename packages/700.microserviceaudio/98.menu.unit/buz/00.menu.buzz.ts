@@ -188,6 +188,7 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
 
 export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     lst = [
+        '[MODEL: VERIFY MMAP LATENT TENSORS]',
         '[PROFILE: INSPECT VAULT MANIFEST CACHE]',
         '[SYSTEM: AUDIT 21-UNIT BEE MANIFEST]',
         '[EDGE: VERIFY WORKER SCAFFOLD]',
@@ -214,6 +215,17 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     src = bit.chcBit.src
 
     switch (src) {
+        case '[MODEL: VERIFY MMAP LATENT TENSORS]': {
+            const auditRes = await ste.hunt(ActMdl.AUDIT_MEMORY_BUDGET, { idx: 'menu-model-ram-audit' })
+            const report = auditRes?.mdlBit?.memoryReport
+            const mbRss = report ? (report.currentRssBytes / (1024 * 1024)).toFixed(1) : '0'
+            await ste.hunt(ActCns.UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [MODEL:COCKPIT] RSS Memory: ${mbRss} MB | Status: ${report?.status || 'UNKNOWN'}`,
+            })
+            break
+        }
+
         case '[PROFILE: INSPECT VAULT MANIFEST CACHE]': {
             const root = process.cwd()
             const auditRes = await ste.hunt(ActPrf.AUDIT_VAULT_BOUNDARY, { idx: 'menu-vault-audit' })
