@@ -3,7 +3,7 @@ export const initPipeline = (
     bal: PipelineBit,
     ste: State,
 ) => {
-    debugger
+
     return cpy
 }
 

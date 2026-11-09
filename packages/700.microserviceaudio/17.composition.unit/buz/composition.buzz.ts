@@ -3,7 +3,7 @@ export const initComposition = (
     bal: CompositionBit,
     ste: State,
 ) => {
-    debugger
+
     return cpy
 }
 

@@ -1,5 +1,5 @@
 export const initProfile = (cpy: ProfileModel, bal: ProfileBit, ste: State) => {
-    debugger
+
     return cpy
 }
 
