@@ -14,6 +14,7 @@ import * as ActSch from '../../08.schemas.unit/schemas.action.js'
 import * as ActFlt from '../../11.filter.unit/filter.action.js'
 import * as ActDsr from '../../16.deesser.unit/deesser.action.js'
 import * as ActPrf from '../../09.profile.unit/profile.action.js'
+import * as ActMdl from '../../96.model.unit/model.action.js'
 
 import type { MenuModel } from '../menu.model.js'
 import type MenuBit from '../fce/menu.bit.js'
@@ -188,6 +189,7 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
 
 export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     lst = [
+        '[MODEL: VERIFY MMAP LATENT TENSORS]',
         '[PROFILE: INSPECT VAULT MANIFEST CACHE]',
         '[SYSTEM: AUDIT 21-UNIT BEE MANIFEST]',
         '[EDGE: VERIFY WORKER SCAFFOLD]',
@@ -214,9 +216,25 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     src = bit.chcBit.src
 
     switch (src) {
+        case '[MODEL: VERIFY MMAP LATENT TENSORS]': {
+            const auditRes = await ste.hunt(ActMdl.AUDIT_MEMORY_BUDGET, {
+                idx: 'menu-model-ram-audit',
+            })
+            const report = auditRes?.mdlBit?.memoryReport
+            const mbRss = report
+                ? (report.currentRssBytes / (1024 * 1024)).toFixed(1)
+                : '0'
+            await ste.hunt(ActCns.UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [MODEL:COCKPIT] RSS Memory: ${mbRss} MB | Status: ${report?.status || 'UNKNOWN'}`,
+            })
+            break
+        }
         case '[PROFILE: INSPECT VAULT MANIFEST CACHE]': {
             const root = process.cwd()
-            const auditRes = await ste.hunt(ActPrf.AUDIT_VAULT_BOUNDARY, { idx: 'menu-vault-audit' })
+            const auditRes = await ste.hunt(ActPrf.AUDIT_VAULT_BOUNDARY, {
+                idx: 'menu-vault-audit',
+            })
             await ste.hunt(ActCns.UPDATE_CONSOLE, {
                 idx: 'cns00',
                 src: `>> [VAULT:AUDIT] Status: ${auditRes?.prfBit?.auditReport?.status || 'UNKNOWN'}`,

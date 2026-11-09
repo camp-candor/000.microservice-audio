@@ -1,60 +1,39 @@
-import { Action } from '../99.core/interface/action.interface.js'
-import ModelBit from './fce/model.bit.js'
+import type { Action } from '../99.core/interface/action.interface.js'
+import type ModelBit from './fce/model.bit.js'
 
 export const INIT_MODEL = '[Model action] Init Model'
 export class InitModel implements Action {
-    readonly type = INIT_MODEL
-    constructor(public bale: ModelBit) {}
-}
-
-export const WRITE_MODEL = '[Model action] Write Model'
-export class WriteModel implements Action {
-    readonly type = WRITE_MODEL
-    constructor(public bale: ModelBit) {}
+  readonly type = INIT_MODEL
+  constructor(public bale: ModelBit) {}
 }
 
 export const UPDATE_MODEL = '[Model action] Update Model'
 export class UpdateModel implements Action {
-    readonly type = UPDATE_MODEL
-    constructor(public bale: ModelBit) {}
+  readonly type = UPDATE_MODEL
+  constructor(public bale: ModelBit) {}
 }
 
-export const CREATE_MODEL = '[Model action] Create Model'
-export class CreateModel implements Action {
-    readonly type = CREATE_MODEL
-    constructor(public bale: ModelBit) {}
+export const RESOLVE_LATENT_TENSOR = '[Model action] Resolve Latent Tensor'
+export class ResolveLatentTensor implements Action {
+  readonly type = RESOLVE_LATENT_TENSOR
+  constructor(public bale: ModelBit) {}
 }
 
-export const READ_MODEL = '[Model action] Read Model'
-export class ReadModel implements Action {
-    readonly type = READ_MODEL
-    constructor(public bale: ModelBit) {}
+export const AUDIT_MEMORY_BUDGET = '[Model action] Audit Memory Budget'
+export class AuditMemoryBudget implements Action {
+  readonly type = AUDIT_MEMORY_BUDGET
+  constructor(public bale: ModelBit) {}
 }
 
-export const DELETE_MODEL = '[Model action] Delete Model'
-export class DeleteModel implements Action {
-    readonly type = DELETE_MODEL
-    constructor(public bale: ModelBit) {}
-}
-
-export const REMOVE_MODEL = '[Model action] Remove Model'
-export class RemoveModel implements Action {
-    readonly type = REMOVE_MODEL
-    constructor(public bale: ModelBit) {}
-}
-
-export const LIST_MODEL = '[List action] List Model'
-export class ListModel implements Action {
-    readonly type = LIST_MODEL
-    constructor(public bale: ModelBit) {}
+export const CONFIGURE_MMAP_ARGS = '[Model action] Configure Mmap Args'
+export class ConfigureMmapArgs implements Action {
+  readonly type = CONFIGURE_MMAP_ARGS
+  constructor(public bale: ModelBit) {}
 }
 
 export type Actions =
-    | InitModel
-    | UpdateModel
-    | CreateModel
-    | ReadModel
-    | DeleteModel
-    | RemoveModel
-    | WriteModel
-    | ListModel
+  | InitModel
+  | UpdateModel
+  | ResolveLatentTensor
+  | AuditMemoryBudget
+  | ConfigureMmapArgs
