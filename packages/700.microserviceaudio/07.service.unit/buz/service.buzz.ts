@@ -1,5 +1,5 @@
 export const initService = (cpy: ServiceModel, bal: ServiceBit, ste: State) => {
-    debugger
+
     return cpy
 }
 

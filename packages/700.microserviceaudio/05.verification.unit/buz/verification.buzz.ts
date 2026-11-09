@@ -3,7 +3,7 @@ export const initVerification = (
     bal: VerificationBit,
     ste: State,
 ) => {
-    debugger
+
     return cpy
 }
 
