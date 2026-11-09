@@ -5,6 +5,7 @@ import crypto from 'node:crypto'
 import * as ActMnu from '../menu.action.js'
 //import * as ActAgt from '../../00.agent.unit/agent.action.js';
 import * as ActCns from '../../act/console.action.js';
+import * as ActPrf from '../../09.profile.unit/profile.action.js';
 import * as ActOlm from '../../00.microserviceaudio.unit/microserviceaudio.action.js'
 import * as ActGen from '../../10.generate.unit/generate.action.js'
 import * as ActLdn from '../../01.loudness.unit/loudness.action.js'
@@ -188,6 +189,8 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
 
 export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     lst = [
+        '[PROFILE: INSPECT VAULT MANIFEST CACHE]',
+        '[SYSTEM: AUDIT 21-UNIT BEE MANIFEST]',
         '[EDGE: VERIFY WORKER SCAFFOLD]',
         '[FILTER: RUN SPECTRAL HYGIENE GAUNTLET]',
         ActGen.EXEC_GENERATE.split(']')[1],
@@ -212,6 +215,16 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     src = bit.chcBit.src
 
     switch (src) {
+        case '[PROFILE: INSPECT VAULT MANIFEST CACHE]': {
+            const root = process.cwd()
+            const auditRes = await ste.hunt(ActPrf.AUDIT_VAULT_BOUNDARY, { idx: 'menu-vault-audit' })
+            await ste.hunt(ActCns.UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [VAULT:AUDIT] Status: ${auditRes?.prfBit?.auditReport?.status || 'UNKNOWN'}`,
+            })
+            break
+        }
+
         case '[EDGE: VERIFY WORKER SCAFFOLD]':
         case ' [EDGE: VERIFY WORKER SCAFFOLD]':
         case 'EDGE: VERIFY WORKER SCAFFOLD':
