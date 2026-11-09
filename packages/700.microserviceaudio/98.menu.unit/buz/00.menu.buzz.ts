@@ -11,6 +11,7 @@ import * as ActLdn from '../../01.loudness.unit/loudness.action.js'
 import * as ActPek from '../../02.peaks.unit/peaks.action.js'
 import * as ActTrn from '../../06.transcription.unit/transcription.action.js'
 import * as ActSch from '../../08.schemas.unit/schemas.action.js'
+import * as ActPrf from '../../09.profile.unit/profile.action.js'
 import * as ActFlt from '../../11.filter.unit/filter.action.js'
 import * as ActDsr from '../../16.deesser.unit/deesser.action.js'
 
@@ -188,6 +189,8 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
 
 export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     lst = [
+        '[PROFILE: INSPECT VAULT MANIFEST CACHE]',
+        '[SYSTEM: AUDIT 21-UNIT BEE MANIFEST]',
         '[EDGE: VERIFY WORKER SCAFFOLD]',
         '[FILTER: RUN SPECTRAL HYGIENE GAUNTLET]',
         ActGen.EXEC_GENERATE.split(']')[1],
@@ -1537,6 +1540,16 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
             }
             await new Promise((resolve) => setTimeout(resolve, 3000))
             break
+
+        case '[PROFILE: INSPECT VAULT MANIFEST CACHE]': {
+            const root = process.cwd()
+            const auditRes = await ste.hunt(ActPrf.AUDIT_VAULT_BOUNDARY, { idx: 'menu-vault-audit' })
+            await ste.hunt(ActCns.UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [VAULT:AUDIT] Status: ${auditRes?.prfBit?.auditReport?.status || 'UNKNOWN'}`,
+            })
+            break
+        }
 
         case '[SYSTEM: AUDIT 21-UNIT BEE MANIFEST]': {
             const bee = await import('../../BEE.js')
