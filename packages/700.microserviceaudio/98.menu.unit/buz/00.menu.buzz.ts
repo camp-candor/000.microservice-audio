@@ -1,3 +1,4 @@
+import * as ActAud from '../../13.audio.unit/audio.action.js'
 /* eslint-disable */
 import path from 'node:path'
 import fs from 'node:fs'
@@ -190,7 +191,8 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
 
 export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     lst = [
-        '[FIREWALL: AUDIT PROHIBITED CADENCES]',
+            '[AUDIO: RUN REDACTION CADENCE BATTERY]',
+            '[FIREWALL: AUDIT PROHIBITED CADENCES]',
         '[DIALOGUE: TEST G2P LEXICON OVERRIDES]',
         '[MODEL: VERIFY MMAP LATENT TENSORS]',
         '[PROFILE: INSPECT VAULT MANIFEST CACHE]',
@@ -219,6 +221,26 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     src = bit.chcBit.src
 
     switch (src) {
+        case '[AUDIO: RUN REDACTION CADENCE BATTERY]': {
+            // Generate 1-second synthetic 440 Hz test tone buffer
+            const sampleRate = 48000
+            const buffer = Buffer.alloc(sampleRate * 2)
+            for (let i = 0; i < sampleRate; i++) {
+                const val = Math.round(Math.sin((2 * Math.PI * 440 * i) / sampleRate) * 16384)
+                buffer.writeInt16LE(val, i * 2)
+            }
+            const res = await ste.hunt(ActAud.EXECUTE_SPECTRAL_INVERSION, {
+                idx: 'menu-audio-redact',
+                dat: { pcmBuffer: buffer, sampleRateHz: sampleRate },
+            })
+            const status = res?.audBit?.result?.status || 'UNKNOWN'
+            await ste.hunt(UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [AUDIO:COCKPIT] Spectral Inversion Status: ${status}`,
+            })
+            break
+        }
+
         case '[FIREWALL: AUDIT PROHIBITED CADENCES]': {
             const auditRes = await ste.hunt(ActDlg.AUDIT_PROHIBITED_CADENCE, {
                 idx: 'menu-cadence-audit',
