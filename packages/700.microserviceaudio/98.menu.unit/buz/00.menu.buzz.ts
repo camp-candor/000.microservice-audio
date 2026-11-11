@@ -2,6 +2,8 @@
 import path from 'node:path'
 import fs from 'node:fs'
 import crypto from 'node:crypto'
+import * as ActDlg from '../../15.dialogue.unit/dialogue.action.js'
+import * as ActMdl from '../../96.model.unit/model.action.js'
 import * as ActMnu from '../menu.action.js'
 //import * as ActAgt from '../../00.agent.unit/agent.action.js';
 import * as ActCns from '../../act/console.action.js'
@@ -188,6 +190,7 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
 
 export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     lst = [
+        '[DIALOGUE: TEST G2P LEXICON OVERRIDES]',
         '[MODEL: VERIFY MMAP LATENT TENSORS]',
         '[PROFILE: INSPECT VAULT MANIFEST CACHE]',
         '[SYSTEM: AUDIT 21-UNIT BEE MANIFEST]',
@@ -215,6 +218,26 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     src = bit.chcBit.src
 
     switch (src) {
+        case '[DIALOGUE: TEST G2P LEXICON OVERRIDES]': {
+            const testPayload = {
+                seriesSlug: 'wiregrass-basin',
+                characterId: 'char_silas',
+                rawDialogueText:
+                    'Do you hear what they are saying in the drainage culvert?',
+                mruType: 'instinctive_reaction' as const,
+            }
+            const res = await ste.hunt(ActDlg.APPLY_DIALECT_G2P, {
+                idx: 'menu-g2p-test',
+                dat: testPayload,
+            })
+            const norm = (res as any)?.dlgBit?.result?.normalizedText || ''
+            await ste.hunt(ActCns.UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [G2P:COCKPIT] Normalized: "${norm}"`,
+            })
+            break
+        }
+
         case '[MODEL: VERIFY MMAP LATENT TENSORS]': {
             const auditRes = await ste.hunt(ActMdl.AUDIT_MEMORY_BUDGET, { idx: 'menu-model-ram-audit' })
             const report = auditRes?.mdlBit?.memoryReport
