@@ -25,6 +25,9 @@ export function reducer(
     case Act.ASSERT_CADENCE_FEASIBILITY:
       return Buzz.assertCadenceFeasibility(clone(model), act.bale, state)
 
+    case Act.AUDIT_PROHIBITED_CADENCE:
+      return Buzz.auditProhibitedCadence(clone(model), act.bale, state)
+
     default:
       return model
   }

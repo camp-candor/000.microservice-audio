@@ -28,10 +28,21 @@ export interface MruPauseEnvelope {
   interPhraseMultiplier: number
 }
 
+export interface CadenceAuditRecord {
+  characterId: string
+  evaluatedCadence: string
+  isPermitted: boolean
+  matchedBannedPattern?: string
+  timestampMs: number
+}
+
 export default interface Dialogue {
   idx: string
   activeSeriesSlug: string
   cachedLexicons: Record<string, SeriesLexiconDictionary>
   linesProcessed: number
+  cadenceAuditsCompleted: number
+  prohibitedBreachesDetected: number
+  cadenceAuditLog: CadenceAuditRecord[]
   dialogueBits: Record<string, DialogueBit>
 }
