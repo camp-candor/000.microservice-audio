@@ -190,6 +190,7 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
 
 export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     lst = [
+        '[FIREWALL: AUDIT PROHIBITED CADENCES]',
         '[DIALOGUE: TEST G2P LEXICON OVERRIDES]',
         '[MODEL: VERIFY MMAP LATENT TENSORS]',
         '[PROFILE: INSPECT VAULT MANIFEST CACHE]',
@@ -218,6 +219,24 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     src = bit.chcBit.src
 
     switch (src) {
+        case '[FIREWALL: AUDIT PROHIBITED CADENCES]': {
+            const auditRes = await ste.hunt(ActDlg.AUDIT_PROHIBITED_CADENCE, {
+                idx: 'menu-cadence-audit',
+                dat: {
+                    seriesSlug: 'wiregrass-basin',
+                    characterId: 'char_silas',
+                    requestedCadence: 'RAPID_STACCATO',
+                    bannedCadences: ['RAPID_STACCATO', 'BREATHLESS_WHISPER'],
+                },
+            })
+            const status = auditRes?.dlgBit?.cadenceResult?.status || 'UNKNOWN'
+            await ste.hunt(ActCns.UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [FIREWALL:COCKPIT] Cadence Audit: ${status}`,
+            })
+            break
+        }
+
         case '[DIALOGUE: TEST G2P LEXICON OVERRIDES]': {
             const testPayload = {
                 seriesSlug: 'wiregrass-basin',

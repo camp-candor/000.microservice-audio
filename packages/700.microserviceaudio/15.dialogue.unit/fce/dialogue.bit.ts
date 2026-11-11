@@ -2,7 +2,23 @@ import type {
   MotivationReactionUnitType,
   MruPauseEnvelope,
   SeriesLexiconDictionary,
+  CadenceAuditRecord,
 } from './dialogue.interface.js'
+
+export interface CadenceEvaluationPayload {
+  seriesSlug: string
+  characterId: string
+  requestedCadence: string
+  bannedCadences?: string[]
+}
+
+export interface CadenceEvaluationResult {
+  status: 'PERMITTED' | 'BANNED_CADENCE_BREACH'
+  characterId: string
+  evaluatedCadence: string
+  matchedBannedPattern?: string
+  error?: string
+}
 
 export interface DialectNormalizationPayload {
   seriesSlug: string
@@ -25,6 +41,7 @@ export interface DialectNormalizationResult {
   regexExpansionsApplied: number
   pauseEnvelope: MruPauseEnvelope
   targetEngine: string
+  cadenceResult?: CadenceEvaluationResult
   error?: string
 }
 
@@ -32,7 +49,8 @@ export default interface DialogueBit {
   idx: string
   src?: string
   val?: number
-  dat?: DialectNormalizationPayload
+  dat?: DialectNormalizationPayload | CadenceEvaluationPayload
+  cadenceResult?: CadenceEvaluationResult
   result?: DialectNormalizationResult
   slv?: (result: { dlgBit: DialogueBit }) => void
 }

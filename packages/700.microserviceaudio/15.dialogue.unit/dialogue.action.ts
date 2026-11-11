@@ -31,9 +31,16 @@ export class AssertCadenceFeasibility implements Action {
   constructor(public bale: DialogueBit) {}
 }
 
+export const AUDIT_PROHIBITED_CADENCE = '[Dialogue action] Audit Prohibited Cadence'
+export class AuditProhibitedCadence implements Action {
+  readonly type = AUDIT_PROHIBITED_CADENCE
+  constructor(public bale: DialogueBit) {}
+}
+
 export type Actions =
   | InitDialogue
   | UpdateDialogue
   | ApplyDialectG2p
   | CalculateMruPause
   | AssertCadenceFeasibility
+  | AuditProhibitedCadence

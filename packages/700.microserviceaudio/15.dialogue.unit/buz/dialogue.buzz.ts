@@ -4,12 +4,14 @@ import { DialogueModel } from '../dialogue.model.js'
 import type DialogueBit from '../fce/dialogue.bit.js'
 import type {
   DialectNormalizationPayload,
-  DialectNormalizationResult,
+  CadenceEvaluationPayload,
+  CadenceEvaluationResult,
 } from '../fce/dialogue.bit.js'
 import type {
   MotivationReactionUnitType,
   MruPauseEnvelope,
   SeriesLexiconDictionary,
+  CadenceAuditRecord,
 } from '../fce/dialogue.interface.js'
 import type State from '../../99.core/state.js'
 
@@ -22,51 +24,95 @@ const logConsole = async (ste: State | undefined, src: string): Promise<void> =>
 }
 
 /**
- * Calculates lead/tail padding and pause dilation multipliers from Dwight Swain MRU tags.
+ * Normalizes cadence tokens into upper-case standardized comparison representations.
  */
+export const normalizeCadenceToken = (cadence: string): string => {
+  return cadence.trim().toUpperCase().replace(/[\s-]+/g, '_')
+}
+
+/**
+ * Evaluates whether a requested prosodic cadence is strictly prohibited by character recipes.
+ */
+export const assertAllowedCadence = (
+  requestedCadence?: string,
+  bannedCadences?: string[],
+): CadenceEvaluationResult => {
+  if (!requestedCadence || !requestedCadence.trim()) {
+    return {
+      status: 'PERMITTED',
+      characterId: 'unknown',
+      evaluatedCadence: 'DEFAULT',
+    }
+  }
+
+  const normalizedRequest = normalizeCadenceToken(requestedCadence)
+
+  if (!bannedCadences || bannedCadences.length === 0) {
+    return {
+      status: 'PERMITTED',
+      characterId: 'unknown',
+      evaluatedCadence: normalizedRequest,
+    }
+  }
+
+  for (const banned of bannedCadences) {
+    const normalizedBanned = normalizeCadenceToken(banned)
+    if (normalizedRequest === normalizedBanned) {
+      throw new Error(`BANNED_CADENCE_BREACH: [${normalizedRequest}] matches prohibited cadence pattern [${normalizedBanned}].`)
+    }
+  }
+
+  return {
+    status: 'PERMITTED',
+    characterId: 'unknown',
+    evaluatedCadence: normalizedRequest,
+  }
+}
+
+/**
+ * Safe evaluator for cadence feasibility that emits structured result without throwing.
+ */
+export const evaluateCadenceFeasibility = (
+  characterId: string,
+  requestedCadence: string,
+  bannedCadences?: string[],
+): CadenceEvaluationResult => {
+  try {
+    const res = assertAllowedCadence(requestedCadence, bannedCadences)
+    return {
+      status: 'PERMITTED',
+      characterId,
+      evaluatedCadence: res.evaluatedCadence,
+    }
+  } catch (err: any) {
+    const normalizedRequest = normalizeCadenceToken(requestedCadence)
+    return {
+      status: 'BANNED_CADENCE_BREACH',
+      characterId,
+      evaluatedCadence: normalizedRequest,
+      matchedBannedPattern: normalizedRequest,
+      error: err instanceof Error ? err.message : String(err),
+    }
+  }
+}
+
 export const calculateMruPauseEnvelope = (
   mruType?: MotivationReactionUnitType,
 ): MruPauseEnvelope => {
   switch (mruType) {
     case 'stimulus':
-      // External event: brisk entry, natural decay
       return { leadSilenceMs: 80, tailSilenceMs: 120, interPhraseMultiplier: 1.0 }
     case 'reflex':
-      // Visceral non-cognitive response: instantaneous attack, clipped hold
       return { leadSilenceMs: 30, tailSilenceMs: 60, interPhraseMultiplier: 0.8 }
     case 'instinctive_reaction':
-      // Autonomic physical reaction: breathless gasp or hesitation
       return { leadSilenceMs: 150, tailSilenceMs: 180, interPhraseMultiplier: 1.25 }
     case 'rational_action':
-      // Deliberate cognitive speech: thoughtful lead-in delay
       return { leadSilenceMs: 250, tailSilenceMs: 200, interPhraseMultiplier: 1.15 }
     default:
       return { leadSilenceMs: 100, tailSilenceMs: 100, interPhraseMultiplier: 1.0 }
   }
 }
 
-/**
- * Verifies that the requested prosodic delivery does not violate prohibited character cadences.
- */
-export const assertAllowedCadence = (
-  requestedCadence?: string,
-  bannedCadences?: string[],
-): void => {
-  if (!requestedCadence || !bannedCadences || bannedCadences.length === 0) {
-    return
-  }
-
-  const normalized = requestedCadence.trim().toUpperCase()
-  for (const banned of bannedCadences) {
-    if (normalized === banned.trim().toUpperCase()) {
-      throw new Error(`BANNED_CADENCE_BREACH: [${normalized}] violates character somatic baseline.`)
-    }
-  }
-}
-
-/**
- * Formats phonetic representations for engine-specific acoustic runtimes.
- */
 export const adaptPhonemeToEngine = (
   phoneme: string,
   lemma: string,
@@ -74,22 +120,16 @@ export const adaptPhonemeToEngine = (
 ): string => {
   switch (targetEngine) {
     case 'cosyvoice':
-      // Wrap in structured SSML tags for flow-matching diffusion network
       return `<phoneme ph="${phoneme}">${lemma}</phoneme>`
     case 'piper':
-      // Piper uses simplified lowercase/uppercase phonemic representations
       return phoneme.replace(/[^a-zA-Z0-9-]/g, '')
     case 'parler':
     case 'styletts2':
     default:
-      // Syllable-stressed representation with hyphens and caps
       return phoneme
   }
 }
 
-/**
- * Executes the Four-Stage Pre-Inference Dialect Expansion and Phonetic Replacement pipeline.
- */
 export const applyDialectLexicon = (
   text: string,
   lexicon: SeriesLexiconDictionary,
@@ -99,9 +139,6 @@ export const applyDialectLexicon = (
   let regexCount = 0
   let phoneticCount = 0
 
-  // --------------------------------------------------------------------------
-  // STAGE 1: PCRE Word-Bounded Regex Syntactic & Morphological Expansion
-  // --------------------------------------------------------------------------
   if (Array.isArray(lexicon.regexReplacements)) {
     for (const rule of lexicon.regexReplacements) {
       try {
@@ -113,35 +150,25 @@ export const applyDialectLexicon = (
           regexCount += matches.length
         }
       } catch {
-        // Skip invalid regex pattern defensively without corrupting execution
+        // Defensive regex parsing
       }
     }
   }
 
-  // --------------------------------------------------------------------------
-  // STAGE 2: Case-Insensitive Tokenization Preserving Prosodic Punctuation
-  // --------------------------------------------------------------------------
-  // Splits into words and prosodic tokens: (?, !, ., ,, --, --)
   const tokenRegex = /([a-zA-Z0-9'-]+|[?!.,--]+|\s+)/g
   const rawTokens = workingText.match(tokenRegex) || [workingText]
-
-  // --------------------------------------------------------------------------
-  // STAGE 3 & 4: Lexical Overrides & Engine-Specific Phoneme Adaptation
-  // --------------------------------------------------------------------------
   const rules = lexicon.phoneticRules || {}
+
   const normalizedTokens = rawTokens.map((token) => {
-    // Check if token is whitespace or prosodic punctuation
     if (/^[?!.,--\s]+$/.test(token)) {
       return token
     }
-
     const cleanLemma = token.toLowerCase().trim()
     if (Object.prototype.hasOwnProperty.call(rules, cleanLemma)) {
       phoneticCount++
       const targetPhoneme = rules[cleanLemma]
       return adaptPhonemeToEngine(targetPhoneme, token, targetEngine)
     }
-
     return token
   })
 
@@ -152,9 +179,6 @@ export const applyDialectLexicon = (
   }
 }
 
-/**
- * Loads voices/<seriesSlug>/lexicon.json directly from series-assets-audio.
- */
 export const loadSeriesLexicon = (
   seriesSlug: string,
   customRoot?: string,
@@ -187,7 +211,6 @@ export const loadSeriesLexicon = (
     }
   }
 
-  // Fallback neutral default dictionary
   return {
     schemaVersion: '2.0.0',
     seriesSlug,
@@ -199,6 +222,9 @@ export const loadSeriesLexicon = (
 
 export const initDialogue = (cpy: DialogueModel, bal: DialogueBit, _ste?: State): DialogueModel => {
   cpy.linesProcessed = 0
+  cpy.cadenceAuditsCompleted = 0
+  cpy.prohibitedBreachesDetected = 0
+  cpy.cadenceAuditLog = []
   cpy.cachedLexicons = {}
   if (bal.slv) bal.slv({ dlgBit: { idx: 'init-dialogue', val: 1 } })
   return cpy
@@ -210,8 +236,61 @@ export const updateDialogue = (cpy: DialogueModel, bal: DialogueBit, _ste?: Stat
   return cpy
 }
 
+export const auditProhibitedCadence = async (
+  cpy: DialogueModel,
+  bal: DialogueBit,
+  ste?: State,
+): Promise<DialogueModel> => {
+  const payload = bal.dat as CadenceEvaluationPayload | undefined
+  if (!payload || !payload.characterId || !payload.requestedCadence) {
+    bal.cadenceResult = {
+      status: 'BANNED_CADENCE_BREACH',
+      characterId: payload?.characterId || 'unknown',
+      evaluatedCadence: 'UNKNOWN',
+      error: 'MISSING_CADENCE_AUDIT_PAYLOAD',
+    }
+    if (bal.slv) bal.slv({ dlgBit: bal })
+    return cpy
+  }
+
+  const result = evaluateCadenceFeasibility(
+    payload.characterId,
+    payload.requestedCadence,
+    payload.bannedCadences,
+  )
+
+  const record: CadenceAuditRecord = {
+    characterId: payload.characterId,
+    evaluatedCadence: result.evaluatedCadence,
+    isPermitted: result.status === 'PERMITTED',
+    matchedBannedPattern: result.matchedBannedPattern,
+    timestampMs: Date.now(),
+  }
+
+  cpy.cadenceAuditLog.push(record)
+  cpy.cadenceAuditsCompleted += 1
+  bal.cadenceResult = result
+
+  if (result.status === 'BANNED_CADENCE_BREACH') {
+    cpy.prohibitedBreachesDetected += 1
+    await logConsole(
+      ste,
+      `:: [FIREWALL:BREACH] Prohibited cadence [${result.evaluatedCadence}] intercepted for character [${payload.characterId}].`,
+    )
+  } else {
+    await logConsole(
+      ste,
+      `>> [FIREWALL:OK] Requested cadence [${result.evaluatedCadence}] permitted for character [${payload.characterId}].`,
+    )
+  }
+
+  if (bal.slv) bal.slv({ dlgBit: bal })
+  return cpy
+}
+
 export const calculateMruPause = (cpy: DialogueModel, bal: DialogueBit, _ste?: State): DialogueModel => {
-  const mruType = bal.dat?.mruType
+  const payload = bal.dat as DialectNormalizationPayload | undefined
+  const mruType = payload?.mruType
   const envelope = calculateMruPauseEnvelope(mruType)
 
   if (bal.slv) {
@@ -221,14 +300,14 @@ export const calculateMruPause = (cpy: DialogueModel, bal: DialogueBit, _ste?: S
         val: 1,
         result: {
           status: 'EXPANDED',
-          seriesSlug: bal.dat?.seriesSlug || 'unknown',
-          characterId: bal.dat?.characterId || 'unknown',
-          originalText: bal.dat?.rawDialogueText || '',
-          normalizedText: bal.dat?.rawDialogueText || '',
+          seriesSlug: payload?.seriesSlug || 'unknown',
+          characterId: payload?.characterId || 'unknown',
+          originalText: payload?.rawDialogueText || '',
+          normalizedText: payload?.rawDialogueText || '',
           phoneticReplacementsApplied: 0,
           regexExpansionsApplied: 0,
           pauseEnvelope: envelope,
-          targetEngine: bal.dat?.targetEngine || 'styletts2',
+          targetEngine: payload?.targetEngine || 'styletts2',
         },
       },
     })
@@ -237,28 +316,33 @@ export const calculateMruPause = (cpy: DialogueModel, bal: DialogueBit, _ste?: S
 }
 
 export const assertCadenceFeasibility = (cpy: DialogueModel, bal: DialogueBit, _ste?: State): DialogueModel => {
-  const payload = bal.dat
+  const payload = bal.dat as CadenceEvaluationPayload | DialectNormalizationPayload | undefined
+  const charId = payload?.characterId || 'unknown'
+  const cadence = payload?.requestedCadence || ''
+  const banned = payload?.bannedCadences
+
   try {
-    assertAllowedCadence(payload?.requestedCadence, payload?.bannedCadences)
+    assertAllowedCadence(cadence, banned)
+    bal.cadenceResult = {
+      status: 'PERMITTED',
+      characterId: charId,
+      evaluatedCadence: normalizeCadenceToken(cadence),
+    }
     if (bal.slv) bal.slv({ dlgBit: { idx: bal.idx, val: 1 } })
   } catch (err: any) {
+    bal.cadenceResult = {
+      status: 'BANNED_CADENCE_BREACH',
+      characterId: charId,
+      evaluatedCadence: normalizeCadenceToken(cadence),
+      matchedBannedPattern: normalizeCadenceToken(cadence),
+      error: err instanceof Error ? err.message : String(err),
+    }
     if (bal.slv) {
       bal.slv({
         dlgBit: {
           idx: bal.idx,
           val: 0,
-          result: {
-            status: 'BANNED_CADENCE_BREACH',
-            seriesSlug: payload?.seriesSlug || 'unknown',
-            characterId: payload?.characterId || 'unknown',
-            originalText: payload?.rawDialogueText || '',
-            normalizedText: '',
-            phoneticReplacementsApplied: 0,
-            regexExpansionsApplied: 0,
-            pauseEnvelope: calculateMruPauseEnvelope(),
-            targetEngine: payload?.targetEngine || 'styletts2',
-            error: err.message,
-          },
+          cadenceResult: bal.cadenceResult,
         },
       })
     }
@@ -271,7 +355,7 @@ export const applyDialectG2p = async (
   bal: DialogueBit,
   ste?: State,
 ): Promise<DialogueModel> => {
-  const payload = bal.dat
+  const payload = bal.dat as DialectNormalizationPayload | undefined
   if (!payload || !payload.rawDialogueText) {
     bal.result = {
       status: 'BREACH',
@@ -289,7 +373,7 @@ export const applyDialectG2p = async (
     return cpy
   }
 
-  // 1. Enforce compile-time banned cadence filter
+  // Pre-synthesis cadence firewall gate
   try {
     assertAllowedCadence(payload.requestedCadence, payload.bannedCadences)
   } catch (err: any) {
@@ -305,19 +389,15 @@ export const applyDialectG2p = async (
       targetEngine: payload.targetEngine || 'styletts2',
       error: err.message,
     }
-    await logConsole(ste, `:: [CADENCE:BREACH] ${err.message}`)
+    await logConsole(ste, `:: [FIREWALL:BREACH] ${err.message}`)
     if (bal.slv) bal.slv({ dlgBit: bal })
     return cpy
   }
 
-  // 2. Resolve series lexicon
   const lexicon = payload.lexiconOverride || cpy.cachedLexicons[payload.seriesSlug] || loadSeriesLexicon(payload.seriesSlug)
   cpy.cachedLexicons[payload.seriesSlug] = lexicon
 
-  // 3. Compute MRU pause envelope
   const pauseEnvelope = calculateMruPauseEnvelope(payload.mruType)
-
-  // 4. Execute Four-Stage Pre-Inference Normalization
   const targetEngine = payload.targetEngine || 'styletts2'
   const { normalizedText, phoneticCount, regexCount } = applyDialectLexicon(
     payload.rawDialogueText,
