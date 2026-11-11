@@ -99,7 +99,7 @@ describe('Phase 3: Neural Latent Tensor Memory Mapping', () => {
 
     await resolveLatentTensor(model, bal, mockSte)
 
-    expect(bal.result?.status).toBe('RESOLVED')
+    expect((bal as any).result?.status).toBe('RESOLVED')
     expect(model.modelsLoadedCount).toBe(1)
     expect(model.loadedTensors.char_silas).toBeDefined()
     expect(model.loadedTensors.char_silas.isMemoryMapped).toBe(true)
