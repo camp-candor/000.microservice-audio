@@ -79,7 +79,7 @@ describe('Phase 3: Neural Latent Tensor Memory Mapping', () => {
 
   it('resolveLatentTensor buzzer dispatches cleanly, logs 7-bit ASCII, and maps descriptor', async () => {
     const model = new ModelModel()
-    const bal = {
+    const bal: any = {
       idx: 'test-tensor-res',
       dat: {
         seriesId: 'wiregrass',

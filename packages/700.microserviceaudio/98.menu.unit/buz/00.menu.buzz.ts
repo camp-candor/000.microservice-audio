@@ -14,6 +14,8 @@ import * as ActSch from '../../08.schemas.unit/schemas.action.js'
 import * as ActFlt from '../../11.filter.unit/filter.action.js'
 import * as ActDsr from '../../16.deesser.unit/deesser.action.js'
 import * as ActPrf from '../../09.profile.unit/profile.action.js'
+import * as ActDlg from '../../15.dialogue.unit/dialogue.action.js'
+import * as ActMdl from '../../96.model.unit/model.action.js'
 
 import type { MenuModel } from '../menu.model.js'
 import type MenuBit from '../fce/menu.bit.js'
@@ -188,6 +190,7 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
 
 export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     lst = [
+        '[DIALOGUE: TEST G2P LEXICON OVERRIDES]',
         '[MODEL: VERIFY MMAP LATENT TENSORS]',
         '[PROFILE: INSPECT VAULT MANIFEST CACHE]',
         '[SYSTEM: AUDIT 21-UNIT BEE MANIFEST]',
@@ -215,6 +218,25 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     src = bit.chcBit.src
 
     switch (src) {
+        case '[DIALOGUE: TEST G2P LEXICON OVERRIDES]': {
+            const testPayload = {
+                seriesSlug: 'wiregrass-basin',
+                characterId: 'char_silas',
+                rawDialogueText: 'Do you hear what they are saying in the drainage culvert?',
+                mruType: 'instinctive_reaction' as const,
+            }
+            const res = await ste.hunt(ActDlg.APPLY_DIALECT_G2P, {
+                idx: 'menu-g2p-test',
+                dat: testPayload,
+            })
+            const norm = res?.dlgBit?.result?.normalizedText || ''
+            await ste.hunt(ActCns.UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [G2P:COCKPIT] Normalized: "${norm}"`,
+            })
+            break
+        }
+
         case '[MODEL: VERIFY MMAP LATENT TENSORS]': {
             const auditRes = await ste.hunt(ActMdl.AUDIT_MEMORY_BUDGET, { idx: 'menu-model-ram-audit' })
             const report = auditRes?.mdlBit?.memoryReport
