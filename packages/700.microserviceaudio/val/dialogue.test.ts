@@ -91,7 +91,7 @@ describe('Phase 4: Dialogue Prosody & G2P Dialect Override Engine', () => {
 
   it('applyDialectG2p buzzer executes end-to-end, logs 7-bit ASCII, and returns structured result', async () => {
     const model = new DialogueModel()
-    const bal = {
+    const bal: any = {
       idx: 'test-g2p-line',
       dat: {
         seriesSlug: 'wiregrass-basin',
@@ -112,9 +112,9 @@ describe('Phase 4: Dialogue Prosody & G2P Dialect Override Engine', () => {
 
     await applyDialectG2p(model, bal, mockSte)
 
-    expect((bal as any).result?.status).toBe('EXPANDED')
-    expect((bal as any).result?.normalizedText).toBe('dee-yoo hear the DEEZ-ul engine run-in?')
-    expect((bal as any).result?.pauseEnvelope.leadSilenceMs).toBe(80)
+    expect(bal.result?.status).toBe('EXPANDED')
+    expect(bal.result?.normalizedText).toBe('dee-yoo hear the DEEZ-ul engine run-in?')
+    expect(bal.result?.pauseEnvelope.leadSilenceMs).toBe(80)
     expect(model.linesProcessed).toBe(1)
     expect(logs.some((l) => l.includes('>> [G2P:EXPAND]'))).toBe(true)
   })

@@ -198,6 +198,7 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
         '[FILTER: RUN SPECTRAL HYGIENE GAUNTLET]',
         ActGen.EXEC_GENERATE.split(']')[1],
         FAIL_GENERATE_DEMO,
+            '[DIALOGUE: TEST G2P LEXICON OVERRIDES]',
         '[SCHEMA: AUDIT INGRESS CONTRACT]',
         'ROOT MENU',
     ]
