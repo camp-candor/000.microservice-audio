@@ -1,219 +1,146 @@
-import * as ActBus from '../../99.bus.unit/bus.action.js'
-import * as ActCol from '../../97.collect.unit/collect.action.js'
-
 import { BusModel } from '../bus.model.js'
-import BusBit from '../fce/bus.bit.js'
-import State from '../../99.core/state.js'
-import S from 'string'
-import clone from 'clone-deep'
+import type BusBit from '../fce/bus.bit.js'
+import type { TelemetryEnvelope } from '../fce/bus.interface.js'
+import type State from '../../99.core/state.js'
 
-var lst, idx, bit, src, dat, dex
+const UPDATE_CONSOLE = '[Console action] Update Console'
 
-export const initBus = (cpy: BusModel, bal: BusBit, ste: State) => {
-    cpy.actList = []
+/**
+ * Strips multi-byte UTF-8 emojis and non-7-bit ASCII characters (outside 0x20-0x7E)
+ * to prevent curses coordinate misalignment and Windows cmd.exe buffer tearing.
+ */
+export const sanitizeTo7BitAscii = (
+    rawInput: string,
+): {
+    cleanAscii: string
+    strippedCount: number
+} => {
+    const input = String(rawInput ?? '')
+    let strippedCount = 0
+    let cleanAscii = ''
 
-    if (bal == null) bal = { idx: null }
-    if (bal.lst == null) bal.lst = []
-
-    if (bal.src != null && bal.src.constructor == Array) lst = bal.src
-
-    bal.lst.forEach((a) => {
-        for (var key in a) {
-            cpy.actList.push(a[key])
+    for (const ch of input) {
+        const code = ch.codePointAt(0) ?? 0
+        if (code >= 0x20 && code <= 0x7e) {
+            cleanAscii += ch
+        } else if (ch === '\n' || ch === '\r' || ch === '\t') {
+            cleanAscii += ' '
+            strippedCount += 1
+        } else {
+            strippedCount += 1
         }
-    })
-
-    ste.bus = (idx, dat, bit) => updateBus(cpy, { idx, dat, bit }, ste)
-
-    if (bal.dat != null) {
-        cpy.MQTT = bal.dat
-    } else {
-        console.log('return promise')
     }
 
-    if (lst == null) {
-        if (bal.src != null) cpy.host = bal.src
-        cpy.client = cpy.MQTT.connect(cpy.host)
-        cpy.client.on('message', (tpc, msg) => {
-            messageBus(cpy, { idx: tpc, src: msg }, ste)
-        })
-        cpy.client.on('connect', () => {
-            console.log(bal.idx + ' connected ' + cpy.host)
-            openBus(cpy, { idx: 'init-bus', lst: cpy.actList }, ste)
-            if (bal.slv != null) bal.slv({ intBit: { idx: 'init-bus' } })
-        })
-    } else {
-        var complete = (lst) => {
-            lst.shift()
+    return { cleanAscii, strippedCount }
+}
 
-            if (lst.length != 0) return
+/**
+ * Formats a telemetry line with canonical 7-bit clean ASCII status prefixes.
+ */
+export const formatAsciiTelemetryLine = (
+    message: string,
+    level: TelemetryEnvelope['level'] = 'INFO',
+): { formatted: string; strippedCount: number } => {
+    const { cleanAscii, strippedCount } = sanitizeTo7BitAscii(message)
+    const trimmed = cleanAscii.trim()
 
-            if (bal.slv != null) bal.slv({ intBit: { idx: 'init-bus' } })
-        }
-
-        lst.forEach(async (a) => {
-            bit = await ste.hunt(ActCol.WRITE_COLLECT, {
-                idx: a.idx,
-                src: a.src,
-                bit: ActBus.CREATE_BUS,
-            })
-
-            var client = bit.clcBit.dat
-
-            client.on('message', (tpc, msg) => {
-                messageBus(cpy, { idx: tpc, src: msg, bit: a.idx }, ste)
-            })
-            client.on('connect', () => {
-                console.log(a.idx + ' connected ' + a.src)
-                openBus(
-                    cpy,
-                    { idx: 'init-bus', lst: cpy.actList, bit: a.idx },
-                    ste,
-                )
-                complete(lst)
-            })
-        })
+    if (trimmed.startsWith('>>') || trimmed.startsWith('::')) {
+        return { formatted: trimmed, strippedCount }
     }
 
+    const prefix =
+        level === 'FAIL' || level === 'WARN' ? `:: [${level}]` : `>> [${level}]`
+
+    return {
+        formatted: `${prefix} ${trimmed}`,
+        strippedCount,
+    }
+}
+
+export const initBus = (cpy: BusModel, bal: BusBit, _ste?: State): BusModel => {
+    cpy.activeSinkIdx = 'cns00'
+    cpy.messagesEmittedCount = 0
+    cpy.nonAsciiBytesStrippedTotal = 0
+    cpy.ringBuffer = []
+    cpy.busBits = {}
+    if (bal.slv) bal.slv({ busBit: { idx: 'init-bus', val: 1 } })
     return cpy
 }
 
-export const createBus = (cpy: BusModel, bal: BusBit, ste: State) => {
-    var client = cpy.MQTT.connect(bal.src)
-    if (bal.slv != null) bal.slv({ busBit: { idx: 'create-bus', dat: client } })
-
-    //client.on('message', (tpc, msg) => { messageBus(cpy, { idx: tpc, src: msg, bit:bal.idx }, ste) })
-    //client.on('connect', () => {
-    //console.log(bal.idx + " connected " + bal.src)
-    //openBus(cpy, { idx: 'init-bus', lst: cpy.actList, bit:bal.idx }, ste)
-    //})
-
+export const updateBus = (
+    cpy: BusModel,
+    bal: BusBit,
+    _ste?: State,
+): BusModel => {
+    if (bal.idx) cpy.busBits[bal.idx] = bal
+    if (bal.slv) bal.slv({ busBit: bal })
     return cpy
 }
 
-export const openBus = async (cpy: BusModel, bal: BusBit, ste: State) => {
-    var out = []
-
-    bal.lst.forEach((a) => {
-        if (a == null) return
-        if (a.includes == null) return
-        if (a.includes('[') && a.includes(']') == false) return
-        out.push(a)
-    })
-
-    var client = cpy.client
-
-    if (bal.bit != null) {
-        bit = await ste.hunt(ActCol.READ_COLLECT, {
-            idx: bal.bit,
-            bit: ActBus.CREATE_BUS,
-        })
-        client = bit.clcBit.dat
-    }
-
-    out.forEach((a) => {
-        client.subscribe(a, (err) => {
-            if (!err) {
-                console.log('subscribing ' + a)
-            }
-        })
-    })
-
+export const flushBusRing = (
+    cpy: BusModel,
+    bal: BusBit,
+    _ste?: State,
+): BusModel => {
+    cpy.ringBuffer = []
+    if (bal.slv)
+        bal.slv({ busBit: { idx: bal.idx || 'flush-bus-ring', val: 1 } })
     return cpy
 }
 
-export const connectBus = (cpy: BusModel, bal: BusBit, ste: State) => {
-    var lst = []
-    //if (bal.val == 1) patch(ste, ActMnu.INIT_MENU, { lst })
-}
+/**
+ * Sanitizes and routes telemetry envelopes exclusively to Blessed console sink cns00.
+ * Degrades gracefully in headless CI / Vitest environments when LIBRARY is absent.
+ */
+export const emitAsciiTelemetry = async (
+    cpy: BusModel,
+    bal: BusBit,
+    ste?: State,
+): Promise<BusModel> => {
+    const rawMessage = bal.dat?.message ?? bal.src ?? ''
+    const level = bal.dat?.level ?? 'INFO'
+    const sinkIdx = bal.dat?.sinkIdx ?? cpy.activeSinkIdx
 
-export const messageBus = async (cpy: BusModel, bal: BusBit, ste: State) => {
-    if (bal.src != null) dat = bal.src.toString()
+    const { formatted, strippedCount } = formatAsciiTelemetryLine(
+        rawMessage,
+        level,
+    )
 
-    idx = bal.idx
-    dat = JSON.parse(dat)
-
-    var client = cpy.client
-
-    if (bal.bit != null) {
-        bit = await ste.hunt(ActCol.READ_COLLECT, {
-            idx: bal.bit,
-            bit: ActBus.CREATE_BUS,
-        })
-        client = bit.clcBit.dat
+    const envelope: TelemetryEnvelope = {
+        timestampUtc: new Date().toISOString(),
+        channel: 'cns00',
+        level,
+        message: formatted,
+        sanitizedByteCount: Buffer.byteLength(formatted, 'ascii'),
+        strippedNonAsciiCount: strippedCount,
     }
 
-    if (idx.includes(cpy.responseSuffix) == true) {
-        var responseIDX = bal.idx
-        var obj = cpy.promises[responseIDX]
-
-        if (obj.slv != null) obj.slv(dat)
-
-        client.unsubscribe(responseIDX, (err) => {
-            if (!err) {
-                //console.log('hitting ' + responseIDX)
-            }
-        })
-    } else {
-        var bit = await ste.hunt(idx, dat)
-        var cloneBit = clone(bit)
-
-        for (var key in cloneBit) {
-            var itm = cloneBit[key]
-            if (itm.dat != null) {
-                if (itm.dat.bit != null) itm.dat.bit = null
-            }
-        }
-
-        cloneBit
-
-        client.publish(bal.idx + cpy.responseSuffix, JSON.stringify(cloneBit))
+    cpy.messagesEmittedCount += 1
+    cpy.nonAsciiBytesStrippedTotal += strippedCount
+    cpy.ringBuffer.push(envelope)
+    if (cpy.ringBuffer.length > cpy.maxRingBufferSize) {
+        cpy.ringBuffer.shift()
     }
 
+    // Library-owned console actions must be hunted on the master LIBRARY bus;
+    // hunting them on the package bus never settles (no library slv attached).
+    // Headless CI / Vitest degradation: when the LIBRARY global is absent, sink
+    // through the injected state so automated runners can observe dispatches.
+    if ((globalThis as any).LIBRARY?.hunt) {
+        await (globalThis as any).LIBRARY.hunt(UPDATE_CONSOLE, {
+            idx: sinkIdx,
+            src: formatted,
+        }).catch(() => {})
+    } else if (ste && typeof ste.hunt === 'function') {
+        await ste
+            .hunt(UPDATE_CONSOLE, { idx: sinkIdx, src: formatted })
+            .catch(() => {})
+    }
+
+    bal.val = 1
+    bal.src = formatted
+    bal.envelope = envelope
+
+    if (bal.slv) bal.slv({ busBit: bal })
     return cpy
 }
-
-//has to return a promise
-export const updateBus = async (cpy: BusModel, bal: BusBit, ste: State) => {
-    //how does one create an error message here when bit should be used
-    var client = cpy.client
-
-    if (bal.bit != null) {
-        bit = await ste.hunt(ActCol.READ_COLLECT, {
-            idx: bal.bit,
-            bit: ActBus.CREATE_BUS,
-        })
-        client = bit.clcBit.dat
-    }
-
-    if (client == null && bal.bit == null) {
-        bit = await ste.hunt(ActCol.FETCH_COLLECT, { bit: ActBus.CREATE_BUS })
-        client = bit.clcBit.dat
-    }
-
-    var responseIDX = bal.idx + cpy.responseSuffix
-
-    var slv
-    const promo = new Promise((rslv, rjct) => (slv = rslv))
-
-    var obj = { slv: (val0) => slv(val0) }
-
-    cpy.promises[responseIDX] = obj
-
-    client.subscribe(responseIDX, (err) => {
-        if (!err) {
-            //console.log('hitting ' + responseIDX)
-        }
-    })
-
-    //03.10.23
-    //bit throws errors since sometimes it is not a primitive
-    //if (bal.dat == null) bal.dat = {}
-    //if (bal.dat.bit != null) bal.dat.bit = null;
-
-    client.publish(bal.idx, JSON.stringify(bal.dat))
-
-    return promo
-}
-
-var patch = (ste, type, bale) => ste.dispatch({ type, bale })

@@ -1,7 +1,5 @@
-import { Action } from '../99.core/interface/action.interface.js'
-import CollectBit from './fce/collect.bit.js'
-
-// Collect actions
+import type { Action } from '../99.core/interface/action.interface.js'
+import type CollectBit from './fce/collect.bit.js'
 
 export const INIT_COLLECT = '[Collect action] Init Collect'
 export class InitCollect implements Action {
@@ -12,6 +10,18 @@ export class InitCollect implements Action {
 export const UPDATE_COLLECT = '[Collect action] Update Collect'
 export class UpdateCollect implements Action {
     readonly type = UPDATE_COLLECT
+    constructor(public bale: CollectBit) {}
+}
+
+export const SEAL_STEM_RECEIPT = '[Collect action] Seal Stem Receipt'
+export class SealStemReceipt implements Action {
+    readonly type = SEAL_STEM_RECEIPT
+    constructor(public bale: CollectBit) {}
+}
+
+export const EXPORT_STEM_MANIFEST = '[Collect action] Export Stem Manifest'
+export class ExportStemManifest implements Action {
+    readonly type = EXPORT_STEM_MANIFEST
     constructor(public bale: CollectBit) {}
 }
 
@@ -102,6 +112,8 @@ export class HashCollect implements Action {
 export type Actions =
     | InitCollect
     | UpdateCollect
+    | SealStemReceipt
+    | ExportStemManifest
     | ReadCollect
     | WriteCollect
     | CreateCollect

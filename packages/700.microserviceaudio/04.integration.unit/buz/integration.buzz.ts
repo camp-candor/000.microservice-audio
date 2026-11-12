@@ -3,7 +3,6 @@ export const initIntegration = (
     bal: IntegrationBit,
     ste: State,
 ) => {
-
     return cpy
 }
 

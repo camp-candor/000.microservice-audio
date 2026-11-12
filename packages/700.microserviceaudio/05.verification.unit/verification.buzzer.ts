@@ -1,2 +1,7 @@
-export { initVerification } from './buz/verification.buzz'
-export { updateVerification } from './buz/verification.buzz'
+export {
+    initVerification,
+    updateVerification,
+    runConformanceFirewall,
+    executeSixStageGauntlet,
+    unlinkQuarantinedStem,
+} from './buz/verification.buzz.js'

@@ -49,6 +49,7 @@ export const assertHostMemoryBudget = (
         currentRssBytes,
         maxAllowedRamBytes,
         headroomBytes,
+        rssMegabytes: Math.round(currentRssBytes / (1024 * 1024)),
         error: passed
             ? undefined
             : `RAM_BUDGET_EXCEEDED: Process RSS [${currentRssBytes} bytes] breached 8.0 GB ceiling [${maxAllowedRamBytes} bytes].`,

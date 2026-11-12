@@ -1,7 +1,7 @@
 import Microserviceaudio from './fce/microserviceaudio.interface.js'
 
 export class MicroserviceaudioModel implements Microserviceaudio {
-    // Not used in this implementation, but keeping the class structure
+    microserviceaudioBits: any = {}
 }
 
 /**

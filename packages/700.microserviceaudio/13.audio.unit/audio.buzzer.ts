@@ -1,2 +1,14 @@
-export { initAudio } from './buz/audio.buzz'
-export { updateAudio } from './buz/audio.buzz'
+export {
+    initAudio,
+    updateAudio,
+    executeSpectralInversion,
+    measureCadenceSignatureAction,
+    classifyCharacterCadenceAction,
+    pcmBufferToFloat32,
+    float32ToPcmBuffer,
+    auditUnvoicedNoiseFloor,
+    flattenPitchWsola,
+    flattenFormantsLpc,
+    measureCadenceSignature,
+    classifyCharacterCadence,
+} from './buz/audio.buzz.js'

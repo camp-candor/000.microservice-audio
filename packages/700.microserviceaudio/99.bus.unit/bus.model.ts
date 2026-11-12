@@ -1,15 +1,13 @@
-import Bus from './fce/bus.interface.js'
-import BusBit from './fce/bus.interface.js'
+import type Bus from './fce/bus.interface.js'
+import type { TelemetryEnvelope } from './fce/bus.interface.js'
+import type BusBit from './fce/bus.bit.js'
 
 export class BusModel implements Bus {
-    MQTT: any
-    //idx:string;
-    //busBitList: BusBit[] = [];
-    //busBits: any = {};
-    actList: any
-    client: any
-    host: string = 'mqtt://localhost:1883'
-    bus: Function
-    responseSuffix: string = '-response'
-    promises: any = {}
+    idx: string = '99.bus'
+    activeSinkIdx: string = 'cns00'
+    messagesEmittedCount: number = 0
+    nonAsciiBytesStrippedTotal: number = 0
+    ringBuffer: TelemetryEnvelope[] = []
+    maxRingBufferSize: number = 256
+    busBits: Record<string, BusBit> = {}
 }

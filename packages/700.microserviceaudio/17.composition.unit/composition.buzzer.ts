@@ -1,2 +1,8 @@
-export { initComposition } from './buz/composition.buzz'
-export { updateComposition } from './buz/composition.buzz'
+export {
+    initComposition,
+    updateComposition,
+    buildVisemeSidecar,
+    quantizeMsToFrames,
+    mapGraphemeToViseme,
+    compileVisemeSidecar,
+} from './buz/composition.buzz.js'

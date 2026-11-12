@@ -1,7 +1,5 @@
-import { Action } from '../99.core/interface/action.interface'
-import PipelineBit from './fce/pipeline.bit'
-
-// Pipeline actions
+import type { Action } from '../99.core/interface/action.interface.js'
+import type PipelineBit from './fce/pipeline.bit.js'
 
 export const INIT_PIPELINE = '[Pipeline action] Init Pipeline'
 export class InitPipeline implements Action {
@@ -15,4 +13,11 @@ export class UpdatePipeline implements Action {
     constructor(public bale: PipelineBit) {}
 }
 
-export type Actions = InitPipeline | UpdatePipeline
+export const EXECUTE_SYNTHESIS_PIPELINE =
+    '[Pipeline action] Execute Synthesis Pipeline'
+export class ExecuteSynthesisPipeline implements Action {
+    readonly type = EXECUTE_SYNTHESIS_PIPELINE
+    constructor(public bale: PipelineBit) {}
+}
+
+export type Actions = InitPipeline | UpdatePipeline | ExecuteSynthesisPipeline

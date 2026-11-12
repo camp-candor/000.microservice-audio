@@ -1,7 +1,5 @@
-import { Action } from '../99.core/interface/action.interface'
-import VerificationBit from './fce/verification.bit'
-
-// Verification actions
+import type { Action } from '../99.core/interface/action.interface.js'
+import type VerificationBit from './fce/verification.bit.js'
 
 export const INIT_VERIFICATION = '[Verification action] Init Verification'
 export class InitVerification implements Action {
@@ -15,4 +13,12 @@ export class UpdateVerification implements Action {
     constructor(public bale: VerificationBit) {}
 }
 
-export type Actions = InitVerification | UpdateVerification
+export const RUN_CONFORMANCE_FIREWALL =
+    '[Verification action] Run Conformance Firewall'
+export class RunConformanceFirewall implements Action {
+    readonly type = RUN_CONFORMANCE_FIREWALL
+    constructor(public bale: VerificationBit) {}
+}
+
+export type Actions =
+    InitVerification | UpdateVerification | RunConformanceFirewall

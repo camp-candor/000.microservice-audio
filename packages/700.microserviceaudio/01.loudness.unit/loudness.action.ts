@@ -1,5 +1,5 @@
-import { Action } from '../99.core/interface/action.interface.js'
-import LoudnessBit from './fce/loudness.bit.js'
+import type { Action } from '../99.core/interface/action.interface.js'
+import type LoudnessBit from './fce/loudness.bit.js'
 
 export const INIT_LOUDNESS = '[Loudness action] Init Loudness'
 export class InitLoudness implements Action {
@@ -19,4 +19,12 @@ export class AuditLoudness implements Action {
     constructor(public bale: LoudnessBit) {}
 }
 
-export type Actions = InitLoudness | UpdateLoudness | AuditLoudness
+export const CALIBRATE_LOUDNESS_TWO_PASS =
+    '[Loudness action] Calibrate Loudness Two Pass'
+export class CalibrateLoudnessTwoPass implements Action {
+    readonly type = CALIBRATE_LOUDNESS_TWO_PASS
+    constructor(public bale: LoudnessBit) {}
+}
+
+export type Actions =
+    InitLoudness | UpdateLoudness | AuditLoudness | CalibrateLoudnessTwoPass

@@ -69,28 +69,28 @@ import type Bus from './99.bus.unit/fce/bus.interface.js'
 import { BusModel } from './99.bus.unit/bus.model.js'
 
 export const list: Array<any> = [
-  MicroserviceaudioUnit,
-  LoudnessUnit,
-  PeaksUnit,
-  PipelineUnit,
-  IntegrationUnit,
-  VerificationUnit,
-  TranscriptionUnit,
-  ServiceUnit,
-  SchemasUnit,
-  ProfileUnit,
-  GenerateUnit,
-  FilterUnit,
-  AcousticUnit,
-  AudioUnit,
-  ConditioningUnit,
-  DialogueUnit,
-  DeesserUnit,
-  CompositionUnit,
-  ModelUnit,
-  CollectUnit,
-  MenuUnit,
-  BusUnit,
+    MicroserviceaudioUnit,
+    LoudnessUnit,
+    PeaksUnit,
+    PipelineUnit,
+    IntegrationUnit,
+    VerificationUnit,
+    TranscriptionUnit,
+    ServiceUnit,
+    SchemasUnit,
+    ProfileUnit,
+    GenerateUnit,
+    FilterUnit,
+    AcousticUnit,
+    AudioUnit,
+    ConditioningUnit,
+    DialogueUnit,
+    DeesserUnit,
+    CompositionUnit,
+    ModelUnit,
+    CollectUnit,
+    MenuUnit,
+    BusUnit,
 ]
 
 import * as reduceFromMicroserviceaudio from './00.microserviceaudio.unit/microserviceaudio.reduce.js'
@@ -117,51 +117,51 @@ import * as reduceFromMenu from './98.menu.unit/menu.reduce.js'
 import * as reduceFromBus from './99.bus.unit/bus.reduce.js'
 
 export const reducer: any = {
-  microserviceaudio: reduceFromMicroserviceaudio.reducer,
-  loudness: reduceFromLoudness.reducer,
-  peaks: reduceFromPeaks.reducer,
-  pipeline: reduceFromPipeline.reducer,
-  integration: reduceFromIntegration.reducer,
-  verification: reduceFromVerification.reducer,
-  transcription: reduceFromTranscription.reducer,
-  service: reduceFromService.reducer,
-  schemas: reduceFromSchemas.reducer,
-  profile: reduceFromProfile.reducer,
-  generate: reduceFromGenerate.reducer,
-  filter: reduceFromFilter.reducer,
-  acoustic: reduceFromAcoustic.reducer,
-  audio: reduceFromAudio.reducer,
-  conditioning: reduceFromConditioning.reducer,
-  dialogue: reduceFromDialogue.reducer,
-  deesser: reduceFromDeesser.reducer,
-  composition: reduceFromComposition.reducer,
-  model: reduceFromModel.reducer,
-  collect: reduceFromCollect.reducer,
-  menu: reduceFromMenu.reducer,
-  bus: reduceFromBus.reducer,
+    microserviceaudio: reduceFromMicroserviceaudio.reducer,
+    loudness: reduceFromLoudness.reducer,
+    peaks: reduceFromPeaks.reducer,
+    pipeline: reduceFromPipeline.reducer,
+    integration: reduceFromIntegration.reducer,
+    verification: reduceFromVerification.reducer,
+    transcription: reduceFromTranscription.reducer,
+    service: reduceFromService.reducer,
+    schemas: reduceFromSchemas.reducer,
+    profile: reduceFromProfile.reducer,
+    generate: reduceFromGenerate.reducer,
+    filter: reduceFromFilter.reducer,
+    acoustic: reduceFromAcoustic.reducer,
+    audio: reduceFromAudio.reducer,
+    conditioning: reduceFromConditioning.reducer,
+    dialogue: reduceFromDialogue.reducer,
+    deesser: reduceFromDeesser.reducer,
+    composition: reduceFromComposition.reducer,
+    model: reduceFromModel.reducer,
+    collect: reduceFromCollect.reducer,
+    menu: reduceFromMenu.reducer,
+    bus: reduceFromBus.reducer,
 }
 
 export default class UnitData implements Model {
-  microserviceaudio: Microserviceaudio = new MicroserviceaudioModel()
-  loudness: Loudness = new LoudnessModel()
-  peaks: Peaks = new PeaksModel()
-  pipeline: Pipeline = new PipelineModel()
-  integration: Integration = new IntegrationModel()
-  verification: Verification = new VerificationModel()
-  transcription: Transcription = new TranscriptionModel()
-  service: Service = new ServiceModel()
-  schemas: Schemas = new SchemasModel()
-  profile: Profile = new ProfileModel()
-  generate: Generate = new GenerateModel()
-  filter: Filter = new FilterModel()
-  acoustic: Acoustic = new AcousticModel()
-  audio: Audio = new AudioModel()
-  conditioning: Conditioning = new ConditioningModel()
-  dialogue: Dialogue = new DialogueModel()
-  deesser: Deesser = new DeesserModel()
-  composition: Composition = new CompositionModel()
-  model: ModelInterface = new ModelModel()
-  collect: Collect = new CollectModel()
-  menu: Menu = new MenuModel()
-  bus: Bus = new BusModel()
+    microserviceaudio: Microserviceaudio = new MicroserviceaudioModel()
+    loudness: Loudness = new LoudnessModel()
+    peaks: Peaks = new PeaksModel()
+    pipeline: Pipeline = new PipelineModel()
+    integration: Integration = new IntegrationModel()
+    verification: Verification = new VerificationModel()
+    transcription: Transcription = new TranscriptionModel()
+    service: Service = new ServiceModel()
+    schemas: Schemas = new SchemasModel()
+    profile: Profile = new ProfileModel()
+    generate: Generate = new GenerateModel()
+    filter: Filter = new FilterModel()
+    acoustic: Acoustic = new AcousticModel()
+    audio: Audio = new AudioModel()
+    conditioning: Conditioning = new ConditioningModel()
+    dialogue: Dialogue = new DialogueModel()
+    deesser: Deesser = new DeesserModel()
+    composition: Composition = new CompositionModel()
+    model: ModelInterface = new ModelModel()
+    collect: Collect = new CollectModel()
+    menu: Menu = new MenuModel()
+    bus: Bus = new BusModel()
 }

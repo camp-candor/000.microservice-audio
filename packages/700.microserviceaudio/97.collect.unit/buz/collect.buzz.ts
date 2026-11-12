@@ -8,9 +8,47 @@ import S from 'string'
 
 import * as doT from 'dot'
 
+import fs from 'node:fs'
+import path from 'node:path'
+import crypto from 'node:crypto'
+import type {
+    SealStemPayload,
+    ExportManifestPayload,
+} from '../fce/collect.bit.js'
+import type {
+    StemTimingReceipt,
+    EpisodeStemManifest,
+} from '../fce/collect.interface.js'
+
+const UPDATE_CONSOLE = '[Console action] Update Console'
+const EMPTY_SHA256 =
+    'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+
+const logConsole = async (
+    ste: State | undefined,
+    src: string,
+): Promise<void> => {
+    // Library-owned console actions must be hunted on the master LIBRARY bus;
+    // hunting them on the package bus never settles (no library slv attached).
+    if ((globalThis as any).LIBRARY?.hunt) {
+        await (globalThis as any).LIBRARY.hunt(UPDATE_CONSOLE, {
+            idx: 'cns00',
+            src,
+        }).catch(() => {})
+        return
+    }
+    if (ste && typeof ste.hunt === 'function') {
+        await ste.hunt(UPDATE_CONSOLE, { idx: 'cns00', src }).catch(() => {})
+    }
+}
 var bit, lst, dat, idx, val, src, dex
 
 export const initCollect = (cpy: CollectModel, bal: CollectBit, ste: State) => {
+    cpy.stemsSealedCount = 0
+    cpy.cumulativeDurationMs = 0
+    cpy.stemReceipts = {}
+    cpy.lastManifestPath = null
+    cpy.lastManifestDigest = null
     return cpy
 }
 
@@ -216,8 +254,6 @@ export const modelCollect = (
     bal: CollectBit,
     ste: State,
 ) => {
-
-
     if (bal.slv != null) bal.slv({ clcBit: { idx: 'model-collect', dat: cpy } })
     return cpy
 }
@@ -227,7 +263,6 @@ export const deleteCollect = (
     bal: CollectBit,
     ste: State,
 ) => {
-
     return cpy
 }
 
@@ -236,7 +271,6 @@ export const emptyCollect = (
     bal: CollectBit,
     ste: State,
 ) => {
-
     return cpy
 }
 
@@ -331,5 +365,265 @@ export const hashCollect = (cpy: CollectModel, bal: CollectBit, ste: State) => {
 
     bal.slv({ clcBit: { idx: 'hash-collect', dat } })
 
+    return cpy
+}
+
+/**
+ * Computes lowercase 64-character SHA-256 hex digest over binary WAV buffers.
+ */
+export const computeStemSha256 = (buffer: Buffer): string => {
+    if (!buffer || buffer.length === 0) {
+        throw new Error(
+            `ZERO_BYTE_POISON_BREACH: Buffer is empty (${EMPTY_SHA256}).`,
+        )
+    }
+    const digest = crypto
+        .createHash('sha256')
+        .update(buffer)
+        .digest('hex')
+        .toLowerCase()
+    if (digest === EMPTY_SHA256) {
+        throw new Error(
+            `ZERO_BYTE_POISON_BREACH: Digest matches empty string hash (${EMPTY_SHA256}).`,
+        )
+    }
+    return digest
+}
+
+/**
+ * Parses RIFF/WAVE header chunks and calculates exact millisecond audio duration.
+ */
+export const extractWavDurationMs = (
+    buffer: Buffer,
+): {
+    durationMs: number
+    sampleRateHz: number
+    bitDepth: number
+    channels: number
+    dataByteLength: number
+} => {
+    if (!buffer || buffer.length < 44) {
+        throw new Error(
+            'INVALID_WAV_HEADER: Buffer is smaller than 44-byte RIFF/WAVE header.',
+        )
+    }
+
+    const riff = buffer.toString('ascii', 0, 4)
+    const wave = buffer.toString('ascii', 8, 12)
+    if (riff !== 'RIFF' || wave !== 'WAVE') {
+        throw new Error(
+            `INVALID_WAV_HEADER: Missing RIFF/WAVE markers (got ${riff}/${wave}).`,
+        )
+    }
+
+    let sampleRateHz = 48000
+    let bitDepth = 16
+    let channels = 1
+    let dataByteLength = 0
+    let foundData = false
+
+    let offset = 12
+    while (offset <= buffer.length - 8) {
+        const chunkId = buffer.toString('ascii', offset, offset + 4)
+        const chunkSize = buffer.readUInt32LE(offset + 4)
+
+        if (chunkId === 'fmt ' && offset + 24 <= buffer.length) {
+            channels = buffer.readUInt16LE(offset + 10)
+            sampleRateHz = buffer.readUInt32LE(offset + 12)
+            bitDepth = buffer.readUInt16LE(offset + 22)
+        } else if (chunkId === 'data') {
+            dataByteLength = Math.min(
+                chunkSize,
+                Math.max(0, buffer.length - (offset + 8)),
+            )
+            foundData = true
+            break
+        }
+        offset += 8 + chunkSize
+    }
+
+    if (!foundData || dataByteLength === 0) {
+        throw new Error(
+            'INVALID_WAV_DATA_CHUNK: Missing or zero-length PCM data chunk.',
+        )
+    }
+
+    const bytesPerSample = Math.max(1, Math.floor(bitDepth / 8))
+    const byteRate = sampleRateHz * Math.max(1, channels) * bytesPerSample
+    const durationMs = Math.round((dataByteLength / byteRate) * 1000)
+
+    return {
+        durationMs,
+        sampleRateHz,
+        bitDepth,
+        channels,
+        dataByteLength,
+    }
+}
+
+/**
+ * RFC 8785 deterministic JSON canonicalization sorting keys lexicographically.
+ */
+export const canonicalizeJson = (value: unknown): string => {
+    if (value === null || typeof value !== 'object') {
+        return JSON.stringify(value)
+    }
+    if (Array.isArray(value)) {
+        return `[${value.map((item) => canonicalizeJson(item)).join(',')}]`
+    }
+    const obj = value as Record<string, unknown>
+    const sortedKeys = Object.keys(obj).sort()
+    const entries = sortedKeys
+        .filter((k) => obj[k] !== undefined)
+        .map((k) => `${JSON.stringify(k)}:${canonicalizeJson(obj[k])}`)
+    return `{${entries.join(',')}}`
+}
+
+export const sealStemReceipt = async (
+    cpy: CollectModel,
+    bal: CollectBit,
+    ste?: State,
+): Promise<CollectModel> => {
+    const payload = bal.dat as SealStemPayload | undefined
+    if (!payload || !payload.lineId || !payload.filePath) {
+        bal.val = 0
+        bal.error = 'MISSING_STEM_ID_OR_PATH'
+        await logConsole(
+            ste,
+            ':: [FAIL] [COLLECT] Missing lineId or filePath in sealStemReceipt.',
+        )
+        if (bal.slv) bal.slv({ clcBit: bal })
+        return cpy
+    }
+
+    try {
+        const buffer = payload.pcmBuffer || fs.readFileSync(payload.filePath)
+        if (buffer.length <= 1024) {
+            throw new Error(
+                `ZERO_BYTE_POISON_BREACH: Stem byte length (${buffer.length}) <= 1024 bytes.`,
+            )
+        }
+
+        const sha256Hash = computeStemSha256(buffer)
+        const wavGeom = extractWavDurationMs(buffer)
+
+        const receipt: StemTimingReceipt = {
+            lineId: payload.lineId,
+            stemRelativePath: payload.stemRelativePath || payload.filePath,
+            sha256Hash,
+            durationMs: wavGeom.durationMs,
+            sampleRateHz: wavGeom.sampleRateHz,
+            bitDepth: wavGeom.bitDepth,
+            channels: wavGeom.channels,
+            byteLength: buffer.length,
+            measuredLufs: payload.measuredLufs ?? -16.0,
+            measuredPeakDbTp: payload.measuredPeakDbTp ?? -1.5,
+            sealedAtUtc: new Date().toISOString(),
+        }
+
+        // Recompute cumulative duration cleanly if overwriting an existing lineId
+        const previousDuration =
+            cpy.stemReceipts[payload.lineId]?.durationMs ?? 0
+        if (!cpy.stemReceipts[payload.lineId]) {
+            cpy.stemsSealedCount += 1
+        }
+        cpy.cumulativeDurationMs =
+            cpy.cumulativeDurationMs - previousDuration + receipt.durationMs
+        cpy.stemReceipts[payload.lineId] = receipt
+
+        bal.val = 1
+        bal.receipt = receipt
+
+        await logConsole(
+            ste,
+            `>> [OK] [SEAL] Stem [${receipt.lineId}] sealed (${receipt.sha256Hash.slice(0, 12)}..., ${receipt.durationMs}ms, ${receipt.byteLength}b)`,
+        )
+    } catch (err: any) {
+        bal.val = 0
+        bal.error = (err?.message || 'STEM_SEALING_ERROR').slice(0, 160)
+        await logConsole(
+            ste,
+            `:: [FAIL] [SEAL] Could not seal stem [${payload.lineId}]: ${bal.error}`,
+        )
+    }
+
+    if (bal.slv) bal.slv({ clcBit: bal })
+    return cpy
+}
+
+export const exportStemManifest = async (
+    cpy: CollectModel,
+    bal: CollectBit,
+    ste?: State,
+): Promise<CollectModel> => {
+    const payload = bal.dat as ExportManifestPayload | undefined
+    if (!payload || !payload.outputPath) {
+        bal.val = 0
+        bal.error = 'MISSING_MANIFEST_OUTPUT_PATH'
+        await logConsole(
+            ste,
+            ':: [FAIL] [MANIFEST] Missing outputPath in exportStemManifest.',
+        )
+        if (bal.slv) bal.slv({ clcBit: bal })
+        return cpy
+    }
+
+    try {
+        const orderedReceipts = Object.values(cpy.stemReceipts).sort((a, b) =>
+            a.lineId.localeCompare(b.lineId),
+        )
+
+        const baseManifest = {
+            schemaVersion: '1.0.0',
+            episodeId: payload.episodeId || cpy.episodeId,
+            seriesSlug: payload.seriesSlug || cpy.seriesSlug,
+            sealedAtUtc: new Date().toISOString(),
+            totalStemsCount: orderedReceipts.length,
+            cumulativeDurationMs: cpy.cumulativeDurationMs,
+            stems: orderedReceipts,
+        }
+
+        const canonicalPayload = canonicalizeJson(baseManifest)
+        const manifestRootSha256 = crypto
+            .createHash('sha256')
+            .update(canonicalPayload, 'utf8')
+            .digest('hex')
+            .toLowerCase()
+
+        const fullManifest: EpisodeStemManifest = {
+            ...baseManifest,
+            manifestRootSha256,
+        }
+
+        const serialized = JSON.stringify(fullManifest, null, 2)
+        const dir = path.dirname(payload.outputPath)
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true })
+        }
+
+        const nonce = crypto.randomBytes(6).toString('hex')
+        const tmpPath = `${payload.outputPath}.tmp_${nonce}`
+        fs.writeFileSync(tmpPath, serialized, 'utf8')
+        fs.renameSync(tmpPath, payload.outputPath)
+
+        cpy.lastManifestPath = payload.outputPath
+        cpy.lastManifestDigest = manifestRootSha256
+        bal.val = 1
+        bal.manifest = fullManifest
+
+        await logConsole(
+            ste,
+            `>> [OK] [MANIFEST] Emitted atomic manifest to [${payload.outputPath}] (Digest: ${manifestRootSha256.slice(0, 12)}...)`,
+        )
+    } catch (err: any) {
+        bal.val = 0
+        bal.error = (err?.message || 'MANIFEST_EXPORT_ERROR').slice(0, 160)
+        await logConsole(
+            ste,
+            `:: [FAIL] [MANIFEST] Export failed: ${bal.error}`,
+        )
+    }
+
+    if (bal.slv) bal.slv({ clcBit: bal })
     return cpy
 }

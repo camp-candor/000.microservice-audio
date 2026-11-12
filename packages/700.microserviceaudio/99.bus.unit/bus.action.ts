@@ -1,29 +1,9 @@
-import { Action } from '../99.core/interface/action.interface.js'
-import BusBit from './fce/bus.bit.js'
-
-// Bus actions
+import type { Action } from '../99.core/interface/action.interface.js'
+import type BusBit from './fce/bus.bit.js'
 
 export const INIT_BUS = '[Bus action] Init Bus'
 export class InitBus implements Action {
     readonly type = INIT_BUS
-    constructor(public bale: BusBit) {}
-}
-
-export const OPEN_BUS = '[Bus action] Open Bus'
-export class OpenBus implements Action {
-    readonly type = OPEN_BUS
-    constructor(public bale: BusBit) {}
-}
-
-export const CONNECT_BUS = '[Bus action] Connect Bus'
-export class ConnectBus implements Action {
-    readonly type = CONNECT_BUS
-    constructor(public bale: BusBit) {}
-}
-
-export const MESSAGE_BUS = '[Bus action] Message Bus'
-export class MessageBus implements Action {
-    readonly type = MESSAGE_BUS
     constructor(public bale: BusBit) {}
 }
 
@@ -33,11 +13,16 @@ export class UpdateBus implements Action {
     constructor(public bale: BusBit) {}
 }
 
-export const CREATE_BUS = '[Bus action] Create Bus'
-export class CreateBus implements Action {
-    readonly type = CREATE_BUS
+export const EMIT_ASCII_TELEMETRY = '[Bus action] Emit Ascii Telemetry'
+export class EmitAsciiTelemetry implements Action {
+    readonly type = EMIT_ASCII_TELEMETRY
     constructor(public bale: BusBit) {}
 }
 
-export type Actions =
-    InitBus | OpenBus | UpdateBus | ConnectBus | MessageBus | CreateBus
+export const FLUSH_BUS_RING = '[Bus action] Flush Bus Ring'
+export class FlushBusRing implements Action {
+    readonly type = FLUSH_BUS_RING
+    constructor(public bale: BusBit) {}
+}
+
+export type Actions = InitBus | UpdateBus | EmitAsciiTelemetry | FlushBusRing
