@@ -219,19 +219,63 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
 
     switch (src) {
         case '[DIALOGUE: TEST G2P LEXICON OVERRIDES]': {
+            // Canonical wiregrass-basin dialect lexicon (mirrors val/dialogue.test.ts).
+            // No voices/<series>/lexicon.json asset ships in-repo, so the cockpit
+            // preview supplies it via lexiconOverride to exercise Stage 1-4 expansion.
+            const wiregrassLexicon = {
+                schemaVersion: '2.0.0',
+                seriesSlug: 'wiregrass-basin',
+                phoneticAlphabet: 'CUSTOM_STRESS_EXPANSION',
+                phoneticRules: {
+                    culvert: 'KULL-vert',
+                    gallbreaker: 'GAWL-bray-ker',
+                    creosote: 'KREE-uh-soht',
+                    slough: 'SLOO',
+                    diesel: 'DEEZ-ul',
+                    siphon: 'SAI-fun',
+                },
+                regexReplacements: [
+                    {
+                        pattern: "\\b(ain't)\\b",
+                        replacement: 'aynt',
+                        description: 'Standardizes dialect negation',
+                    },
+                    {
+                        pattern: '\\b(do you)\\b',
+                        replacement: 'dee-yoo',
+                        description:
+                            'Softens interrogative onset into regional drawl',
+                    },
+                    {
+                        pattern: '\\b(\\w+)ing\\b',
+                        replacement: "$1-in'",
+                        description:
+                            'Enforces dropped alveolar nasals across continuous verbs',
+                    },
+                    {
+                        pattern: '\\b(drainage)\\b',
+                        replacement: 'DRAY-nij',
+                        description:
+                            'Suppresses secondary syllable enunciation',
+                    },
+                ],
+            }
             const testPayload = {
                 seriesSlug: 'wiregrass-basin',
                 characterId: 'char_silas',
                 rawDialogueText:
                     'Do you hear what they are saying in the drainage culvert?',
                 mruType: 'instinctive_reaction' as const,
+                lexiconOverride: wiregrassLexicon,
             }
             const res = await ste.hunt(ActDlg.APPLY_DIALECT_G2P, {
                 idx: 'menu-g2p-test',
                 dat: testPayload,
             })
             const norm = (res as any)?.dlgBit?.result?.normalizedText || ''
-            await ste.hunt(ActCns.UPDATE_CONSOLE, {
+            // Library-owned console actions must be hunted on the master LIBRARY
+            // bus; hunting them on the package bus never settles.
+            await global.LIBRARY.hunt(UPDATE_CONSOLE, {
                 idx: 'cns00',
                 src: `>> [G2P:COCKPIT] Normalized: "${norm}"`,
             })
@@ -239,10 +283,14 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
         }
 
         case '[MODEL: VERIFY MMAP LATENT TENSORS]': {
-            const auditRes = await ste.hunt(ActMdl.AUDIT_MEMORY_BUDGET, { idx: 'menu-model-ram-audit' })
+            const auditRes = await ste.hunt(ActMdl.AUDIT_MEMORY_BUDGET, {
+                idx: 'menu-model-ram-audit',
+            })
             const report = auditRes?.mdlBit?.memoryReport
-            const mbRss = report ? (report.currentRssBytes / (1024 * 1024)).toFixed(1) : '0'
-            await ste.hunt(ActCns.UPDATE_CONSOLE, {
+            const mbRss = report
+                ? (report.currentRssBytes / (1024 * 1024)).toFixed(1)
+                : '0'
+            await global.LIBRARY.hunt(UPDATE_CONSOLE, {
                 idx: 'cns00',
                 src: `>> [MODEL:COCKPIT] RSS Memory: ${mbRss} MB | Status: ${report?.status || 'UNKNOWN'}`,
             })
@@ -251,8 +299,10 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
 
         case '[PROFILE: INSPECT VAULT MANIFEST CACHE]': {
             const root = process.cwd()
-            const auditRes = await ste.hunt(ActPrf.AUDIT_VAULT_BOUNDARY, { idx: 'menu-vault-audit' })
-            await ste.hunt(ActCns.UPDATE_CONSOLE, {
+            const auditRes = await ste.hunt(ActPrf.AUDIT_VAULT_BOUNDARY, {
+                idx: 'menu-vault-audit',
+            })
+            await global.LIBRARY.hunt(UPDATE_CONSOLE, {
                 idx: 'cns00',
                 src: `>> [VAULT:AUDIT] Status: ${auditRes?.prfBit?.auditReport?.status || 'UNKNOWN'}`,
             })
@@ -1611,7 +1661,9 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
             return cpy
 
         default:
-            bit = await ste.hunt(CLOSE_TERMINAL, {})
+            // Library-owned terminal action must be hunted on the master LIBRARY
+            // bus; package-bus hunts never settle (see day-002 003.phase-one V7).
+            bit = await global.LIBRARY.hunt(CLOSE_TERMINAL, {})
             break
     }
 
